@@ -1,0 +1,1054 @@
+{% extends "base.html" %}
+{% block extra_css %}
+<style>
+    .executive-hero {
+        position: relative;
+        overflow: hidden;
+        border-radius: 24px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        background:
+            radial-gradient(circle at top left, rgba(181, 32, 37, 0.14), transparent 34%),
+            radial-gradient(circle at top right, rgba(8, 145, 178, 0.14), transparent 32%),
+            var(--card-bg);
+        border: 1px solid var(--border);
+    }
+    .executive-title {
+        font-size: 2rem;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        margin-bottom: 0.25rem;
+    }
+    .unit-pill,
+    .metric-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        border-radius: 999px;
+        padding: 0.45rem 0.8rem;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.04);
+        color: var(--text-secondary);
+        font-size: 0.82rem;
+        font-weight: 600;
+    }
+    .metric-pill strong {
+        color: var(--text-primary);
+    }
+    .chart-card {
+        position: relative;
+        overflow: hidden;
+        height: 100%;
+        border-radius: 20px;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        transition: all 0.25s ease;
+    }
+    .chart-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(181, 32, 37, 0.38);
+        box-shadow: 0 24px 60px rgba(181, 32, 37, 0.08);
+    }
+    .chart-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1rem 1rem 0;
+    }
+    .chart-kicker {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--text-secondary);
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+    .chart-title {
+        font-size: 1rem;
+        font-weight: 800;
+        margin: 0;
+    }
+    .chart-subtitle {
+        color: var(--text-secondary);
+        font-size: 0.78rem;
+        margin: 0.2rem 0 0;
+    }
+    .chart-shell {
+        min-height: 285px;
+        padding: 0.75rem;
+    }
+    .chart-shell-sm {
+        min-height: 235px;
+        padding: 0.75rem;
+    }
+    .chart-shell-compact {
+        min-height: 170px;
+        padding: 0.5rem 0.75rem;
+    }
+    .view-more-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.04);
+        color: var(--text-primary);
+        text-decoration: none;
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding: 0.45rem 0.75rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    .view-more-btn:hover {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: white;
+        transform: translateX(2px);
+    }
+    .graph-first-note {
+        border-radius: 18px;
+        background: rgba(181,32,37,0.06);
+        border: 1px solid rgba(181,32,37,0.14);
+        padding: 1rem;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+    .details-section {
+        display: none;
+        margin-top: 1.5rem;
+    }
+    .details-section.show {
+        display: block;
+    }
+    .detail-card {
+        border-radius: 18px;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        height: 100%;
+        overflow: hidden;
+    }
+    .detail-card-header {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: center;
+    }
+    .detail-card-body {
+        padding: 1rem;
+    }
+    .mini-stat-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+    }
+    .mini-stat {
+        border-radius: 14px;
+        padding: 0.85rem;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid var(--border);
+    }
+    .mini-stat small {
+        color: var(--text-secondary);
+        font-weight: 600;
+    }
+    .mini-stat strong {
+        display: block;
+        margin-top: 0.25rem;
+        font-size: 1.15rem;
+    }
+    .asset-list-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border);
+    }
+    .asset-list-row:last-child {
+        border-bottom: none;
+    }
+    .asset-id {
+        font-weight: 800;
+        color: var(--primary);
+        font-size: 0.88rem;
+    }
+    .asset-name {
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+    }
+    .status-dot {
+        width: 0.55rem;
+        height: 0.55rem;
+        border-radius: 999px;
+        display: inline-block;
+        margin-right: 0.35rem;
+    }
+    .dot-assigned { background: #059669; }
+    .dot-available { background: #d97706; }
+    .dot-service { background: #dc2626; }
+    .dot-warranty { background: #db2777; }
+    .dot-scrap { background: #6b7280; }
+    .apexcharts-tooltip {
+        color: #111827;
+    }
+    @media (max-width: 768px) {
+        .executive-title {
+            font-size: 1.55rem;
+        }
+        .chart-shell,
+        .chart-shell-sm {
+            min-height: 240px;
+        }
+        .mini-stat-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="executive-hero">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+        <div>
+            <div class="chart-kicker">Executive Dashboard</div>
+            <h1 class="executive-title">{{ selected_unit.company_name if selected_unit.company_name else 'MarvelTech' }} Asset Command Center</h1>
+            <p class="text-muted mb-0">
+                
+            </p>
+        </div>
+        <div class="d-flex flex-wrap justify-content-end gap-2">
+            <span class="unit-pill">
+                <i class="bi bi-building"></i>
+               {% if selected_unit.country_flag %}
+    {% if is_uploaded_image(selected_unit.country_flag) %}
+        <img src="{{ get_uploaded_image_url(selected_unit.country_flag) }}"
+             alt="{{ selected_unit.name }} Flag"
+             style="height: 18px; width: 26px; object-fit: cover; border-radius: 4px;">
+    {% else %}
+        {{ selected_unit.country_flag }}
+    {% endif %}
+{% endif %}
+{{ selected_unit.name }}
+            </span>
+            <span class="metric-pill">
+                FY <strong>{{ capital_budget_data.fiscal_year }}</strong>
+            </span>
+            <span class="metric-pill">
+                Assets <strong>{{ total }}</strong>
+            </span>
+            <span class="metric-pill">
+                Value <strong>{{ total_value|format_currency }}</strong>
+            </span>
+        </div>
+    </div>
+</div>
+<!-- Year-wise Trend Analysis -->
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <div>
+                    <div class="chart-kicker">Year-wise Trend Analysis</div>
+                    <h5 class="chart-title">Purchase Trend</h5>
+                    <p class="chart-subtitle">
+                        Total budget, spent budget, and remaining budget over time for {{ selected_unit.name }}
+                    </p>
+                </div>
+            </div>
+           <div id="yearWiseTrendChart" class="chart-shell chart-shell-compact"></div>
+    </div>
+    </div>
+</div>
+<!-- Warranty Dashboard -->
+<div class="row g-4 mb-3">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <div class="chart-kicker">Warranty Overview</div>
+                <h5 class="chart-title mb-0">Warranty Dashboard</h5>
+            </div>
+            <a href="{{ url_for('warranty_report') }}" class="view-more-btn">
+                Full Warranty Report <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <a href="{{ url_for('warranty_report', filter='under') }}" class="text-decoration-none">
+            <div class="mini-stat h-100" style="border-left: 3px solid #059669;">
+                <small><i class="bi bi-shield-check me-1"></i>Under Warranty</small>
+                <strong class="text-success">{{ warranty_data.under_warranty }}</strong>
+            </div>
+        </a>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <a href="{{ url_for('warranty_report', filter='expiring') }}" class="text-decoration-none">
+            <div class="mini-stat h-100" style="border-left: 3px solid #d97706;">
+                <small><i class="bi bi-hourglass-split me-1"></i>Warranty Expiring (30 Days)</small>
+                <strong class="text-warning">{{ warranty_data.expiring }}</strong>
+            </div>
+        </a>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <a href="{{ url_for('warranty_report', filter='expired') }}" class="text-decoration-none">
+            <div class="mini-stat h-100" style="border-left: 3px solid #dc2626;">
+                <small><i class="bi bi-shield-x me-1"></i>Warranty Expired</small>
+                <strong class="text-danger">{{ warranty_data.expired }}</strong>
+            </div>
+        </a>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <a href="{{ url_for('warranty_report', filter='extended') }}" class="text-decoration-none">
+            <div class="mini-stat h-100" style="border-left: 3px solid #0891b2;">
+                <small><i class="bi bi-shield-plus me-1"></i>Extended Warranty</small>
+                <strong class="text-info">{{ warranty_data.extended }}</strong>
+            </div>
+        </a>
+    </div>
+</div>
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <div>
+                    <div class="chart-kicker">Warranty Status</div>
+                    <h5 class="chart-title">Warranty Status Breakdown</h5>
+                </div>
+            </div>
+            <div id="warrantyStatusChart" class="chart-shell"></div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <div>
+                    <div class="chart-kicker">Next 6 Months</div>
+                    <h5 class="chart-title">Monthly Warranty Expiry Trend</h5>
+                </div>
+            </div>
+            <div id="warrantyTrendChart" class="chart-shell"></div>
+        </div>
+    </div>
+</div>
+<!-- Main Executive Charts -->
+<div class="row g-4">
+
+    <div class="col-lg-4">
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <div>
+                    <div class="chart-kicker">Capital Budget</div>
+                    <h5 class="chart-title">Utilization Report</h5>
+                    <p class="chart-subtitle">
+                        Spent vs remaining budget
+                    </p>
+                </div>
+                <button class="view-more-btn" onclick="showDetails('budgetDetails')">
+                    View More <i class="bi bi-arrow-right"></i>
+                </button>
+            </div>
+            <div id="capitalBudgetChart" class="chart-shell"></div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <div>
+                    <div class="chart-kicker">Asset Status</div>
+                    <h5 class="chart-title">Asset Lifecycle Report</h5>
+                    <p class="chart-subtitle">
+                        Assigned, unassigned, service, warranty, scrap
+                    </p>
+                </div>
+                <button class="view-more-btn" onclick="showDetails('statusDetails')">
+                    View More <i class="bi bi-arrow-right"></i>
+                </button>
+            </div>
+            <div id="assetStatusChart" class="chart-shell"></div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <div>
+                    <div class="chart-kicker">Asset Category</div>
+                    <h5 class="chart-title">Asset Allocation Report</h5>
+                    <p class="chart-subtitle">
+                        IT, Infrastructure, Fixed, and IP assets
+                    </p>
+                </div>
+                <button class="view-more-btn" onclick="showDetails('categoryDetails')">
+                    View More <i class="bi bi-arrow-right"></i>
+                </button>
+            </div>
+            <div id="assetCategoryChart" class="chart-shell"></div>
+        </div>
+    </div>
+</div>
+<!-- Category-wise Graphs -->
+<div class="row g-4 mt-1">
+    {% for category_name, data in category_wise_status_data.items() %}
+    <div class="col-lg-3 col-md-6">
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <div>
+                    <div class="chart-kicker">Status</div>
+                    <h5 class="chart-title">{{ category_name }}</h5>
+                    <p class="chart-subtitle"></p>
+                </div>
+                <a href="{{ data.url }}" class="view-more-btn">
+                    Open <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+            <div
+                id="categoryWiseChart{{ loop.index }}"
+                class="chart-shell-sm category-wise-chart"
+                data-title="{{ category_name }}"
+                data-url="{{ data.url }}"
+                data-assigned="{{ data.assigned }}"
+                data-unassigned="{{ data.unassigned }}"
+                data-service="{{ data.in_service }}"
+                data-warranty="{{ data.warranty_expiring }}"
+                data-scrap="{{ data.scrap }}">
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+<!-- Hidden Details: Revealed by View More -->
+<div id="budgetDetails" class="details-section">
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <div>
+                <h5 class="fw-bold mb-1">Capital Budget Details</h5>
+                <p class="text-muted mb-0">Expanded after View More</p>
+            </div>
+            <a href="{{ url_for('capital_budget_dashboard') }}" class="view-more-btn">
+                Budget Page <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+        <div class="detail-card-body">
+            <div class="mini-stat-grid">
+                <div class="mini-stat">
+                    <small>Total Budget</small>
+                    <strong>{{ capital_budget_data.total_budget|format_currency }}</strong>
+                </div>
+                <div class="mini-stat">
+                    <small>Spent</small>
+                    <strong class="text-success">{{ capital_budget_data.spent|format_currency }}</strong>
+                </div>
+                <div class="mini-stat">
+                    <small>Remaining</small>
+                    <strong class="text-warning">{{ capital_budget_data.remaining|format_currency }}</strong>
+                </div>
+                <div class="mini-stat">
+                    <small>Utilization</small>
+                    <strong class="text-info">{{ capital_budget_data.utilization_pct }}%</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="statusDetails" class="details-section">
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <div>
+                <h5 class="fw-bold mb-1">Asset Status Details</h5>
+                <p class="text-muted mb-0">Expanded status counts and lifecycle overview</p>
+            </div>
+        </div>
+        <div class="detail-card-body">
+            <div class="mini-stat-grid">
+                <div class="mini-stat">
+                    <small><span class="status-dot dot-assigned"></span>Assigned</small>
+                    <strong>{{ assigned }}</strong>
+                </div>
+                <div class="mini-stat">
+                    <small><span class="status-dot dot-available"></span>Unassigned</small>
+                    <strong>{{ available }}</strong>
+                </div>
+                <div class="mini-stat">
+                    <small><span class="status-dot dot-service"></span>In Service</small>
+                    <strong>{{ in_service }}</strong>
+                </div>
+                <div class="mini-stat">
+                    <small><span class="status-dot dot-warranty"></span>Warranty Expiring</small>
+                    <strong>{{ warranty_expiring }}</strong>
+                </div>
+                <div class="mini-stat">
+                    <small><span class="status-dot dot-scrap"></span>Scrap</small>
+                    <strong>{{ scrapped }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="categoryDetails" class="details-section">
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <div>
+                <h5 class="fw-bold mb-1">Asset Category Details</h5>
+                <p class="text-muted mb-0">Detailed category records appear after View More</p>
+            </div>
+            <a href="{{ url_for('business_unit_country', country_code=selected_unit.code) }}" class="view-more-btn">
+                Business Unit <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+        <div class="detail-card-body">
+            {% for item in category_chart_data %}
+            <div class="asset-list-row">
+                <div>
+                    <div class="asset-id">{{ item.name }}</div>
+                    <div class="asset-name">{{ item.asset_type }} · {{ item.count }} assets</div>
+                </div>
+                <strong>{{ item.cost|format_currency }}</strong>
+            </div>
+            {% else %}
+            <div class="text-muted">No category data available for this business unit.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+<!-- Recent assets hidden below graph-first dashboard -->
+<div class="details-section show">
+    <div class="row g-4 mt-1">
+        <div class="col-lg-6">
+            <div class="detail-card">
+                <div class="detail-card-header">
+                    <div>
+                        <h5 class="fw-bold mb-1">Recent Purchases</h5>
+                        <p class="text-muted mb-0">Preview list for executive follow-up</p>
+                    </div>
+                </div>
+                <div class="detail-card-body">
+                    {% for asset in recent_purchases %}
+                    <div class="asset-list-row">
+                        <div>
+                            <div class="asset-id">{{ asset.asset_id }}</div>
+                            <div class="asset-name">{{ asset.asset_name }}</div>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-primary">{{ asset.asset_type }}</span>
+                            <small class="text-muted d-block">{{ asset.purchase_date|format_date }}</small>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-muted">No recent purchases found.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.0/dist/apexcharts.min.js"></script>
+<script>
+    const chartPalette = {
+        primary: '#b52025',
+        success: '#059669',
+        warning: '#d97706',
+        danger: '#dc2626',
+        info: '#0891b2',
+        muted: '#6b7280',
+        pink: '#db2777',
+        ip: '#94a3b8'
+    };
+    const dashboardTrends = {{ dashboard_trends|default({
+        "years": [],
+        "total_budget": [],
+        "budget_spent": [],
+        "remaining_budget": []
+    }, true)|tojson }};
+    const capitalBudgetData = {
+        totalBudget: {{ capital_budget_data.total_budget|default(0)|round(2) }},
+        spent: {{ capital_budget_data.spent|default(0)|round(2) }},
+        remaining: {{ capital_budget_data.remaining|default(0)|round(2) }},
+        spentPct: {{ capital_budget_data.spent_pct|default(capital_budget_data.utilization_pct)|default(0)|round(2) }},
+        remainingPct: {{ capital_budget_data.remaining_pct|default(0)|round(2) }}
+    };
+    const assetStatusData = {
+        assigned: {{ assigned|default(0) }},
+        available: {{ available|default(0) }},
+        inService: {{ in_service|default(0) }},
+        warrantyExpiring: {{ warranty_expiring|default(0) }},
+        scrapped: {{ scrapped|default(0) }}
+    };
+    const warrantyData = {{ warranty_data|default({
+        'pie_labels': ['Under Warranty', 'Expiring (30 Days)', 'Expired'],
+        'pie_values': [0, 0, 0],
+        'trend_labels': [],
+        'trend_counts': []
+    }, true)|tojson }};
+    function showDetails(id) {
+        document.querySelectorAll('.details-section').forEach(section => {
+            if (section.id && section.id !== id) {
+                section.classList.remove('show');
+            }
+        });
+        const section = document.getElementById(id);
+        if (!section) return;
+        section.classList.toggle('show');
+        if (section.classList.contains('show')) {
+            section.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    }
+    function chartBaseOptions() {
+        return {
+            chart: {
+                fontFamily: 'Inter, sans-serif',
+                toolbar: { show: false },
+                animations: {
+                    enabled: true,
+                    easing: 'easeinout',
+                    speed: 700
+                }
+            },
+            tooltip: {
+                theme: 'light'
+            },
+            legend: {
+                position: 'bottom',
+                fontSize: '12px',
+                labels: {
+                    colors: '#6b7280'
+                },
+                markers: {
+                    radius: 4
+                }
+            },
+            stroke: {
+                width: 2,
+                colors: ['#ffffff']
+            },
+            noData: {
+                text: 'No data available'
+            }
+        };
+    }
+    const trendEl = document.querySelector('#yearWiseTrendChart');
+    if (trendEl) {
+        const trendYears = dashboardTrends.years || [];
+        const trendSeries = [
+            {
+                name: 'Total Budget',
+                data: dashboardTrends.total_budget || []
+            },
+            {
+                name: 'Budget Spent',
+                data: dashboardTrends.budget_spent || []
+            },
+        ];
+        const hasData = trendYears.length > 0 && trendSeries.some(function (s) {
+            return Array.isArray(s.data) && s.data.length > 0;
+        });
+        if (!hasData) {
+            trendEl.innerHTML = '<div class="d-flex align-items-center justify-content-center text-muted" style="height:190px;">No budget data available for this business unit yet.</div>';
+        } else {
+            new ApexCharts(trendEl, {
+    ...chartBaseOptions(),
+    chart: {
+        ...chartBaseOptions().chart,
+        type: 'line',
+        height: 260,
+        zoom: {
+            enabled: false
+        },
+        toolbar: {
+            show: false
+        }
+    },
+    series: trendSeries.map(function (s) {
+        return {
+            name: s.name,
+            data: (s.data || []).map(function (value, index) {
+                return {
+                    x: trendYears[index],
+                    y: Number(value || 0)
+                };
+            })
+        };
+    }),
+                colors: [
+                    chartPalette.primary,
+                    chartPalette.success
+                ],
+                stroke: {
+                    width: 3,
+                    curve: 'smooth'
+                },
+                markers: {
+    size: 4,
+    strokeWidth: 2,
+    hover: {
+        size: 7
+    }
+},
+xaxis: {
+    type: 'category',
+    categories: trendYears,
+                    labels: {
+                        style: {
+                            colors: '#6b7280'
+                        }
+                    }
+                },
+                yaxis: {
+                    labels: {
+                        formatter: function (value) {
+                            return Number(value || 0).toLocaleString();
+                        },
+                        style: {
+                            colors: '#6b7280'
+                        }
+                    }
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                grid: {
+                    borderColor: '#e5e7eb',
+                    strokeDashArray: 4
+                },
+                tooltip: {
+                    shared: true,
+                    intersect: false,
+                    y: {
+                        formatter: function (value) {
+                            return Number(value || 0).toLocaleString();
+                        }
+                    }
+                }
+            }).render();
+        }
+    }
+    const budgetEl = document.querySelector('#capitalBudgetChart');
+    if (budgetEl) {
+        new ApexCharts(budgetEl, {
+            ...chartBaseOptions(),
+            chart: {
+                ...chartBaseOptions().chart,
+                type: 'donut',
+                height: 285,
+                events: {
+                    dataPointSelection: function () {
+                        window.location.href = "{{ url_for('capital_budget_dashboard') }}";
+                    }
+                }
+            },
+            series: [
+                capitalBudgetData.spentPct || 0,
+                capitalBudgetData.remainingPct || 0
+            ],
+            labels: ['Spent', 'Remaining'],
+            colors: [chartPalette.primary, chartPalette.success],
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '72%',
+                        labels: {
+                            show: true,
+                            name: {
+                                show: true,
+                                color: '#6b7280'
+                            },
+                            value: {
+                                show: true,
+                                fontSize: '18px',
+                                fontWeight: 800,
+                                color: '#1f2937',
+                                formatter: function () {
+                                    return capitalBudgetData.spentPct + '%';
+                                }
+                            },
+                            total: {
+                                show: true,
+                                label: 'Used',
+                                color: '#6b7280',
+                                formatter: function () {
+                                    return capitalBudgetData.spentPct + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            dataLabels: {
+                enabled: false
+            }
+        }).render();
+    }
+    const statusEl = document.querySelector('#assetStatusChart');
+    if (statusEl) {
+        new ApexCharts(statusEl, {
+            ...chartBaseOptions(),
+            chart: {
+                ...chartBaseOptions().chart,
+                type: 'donut',
+                height: 285,
+                events: {
+                    dataPointSelection: function () {
+                        showDetails('statusDetails');
+                    }
+                }
+            },
+            series: [
+                assetStatusData.assigned || 0,
+                assetStatusData.available || 0,
+                assetStatusData.inService || 0,
+                assetStatusData.warrantyExpiring || 0,
+                assetStatusData.scrapped || 0
+            ],
+            labels: [
+                'Assigned',
+                'Unassigned',
+                'Service',
+                'Warranty',
+                'Scrap'
+            ],
+            colors: [
+                chartPalette.success,
+                chartPalette.warning,
+                chartPalette.danger,
+                chartPalette.pink,
+                chartPalette.muted
+            ],
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '72%',
+                        labels: {
+                            show: true,
+                            total: {
+                                show: true,
+                                label: 'Assets',
+                                formatter: function () {
+                                    return Object.values(assetStatusData).reduce((sum, value) => {
+                                        return sum + Number(value || 0);
+                                    }, 0);
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            dataLabels: {
+                enabled: false
+            }
+        }).render();
+    }
+    const categoryEl = document.querySelector('#assetCategoryChart');
+    if (categoryEl) {
+        new ApexCharts(categoryEl, {
+            ...chartBaseOptions(),
+            chart: {
+                ...chartBaseOptions().chart,
+                type: 'radialBar',
+                height: 285,
+                events: {
+                    dataPointSelection: function (event, chartContext, config) {
+                        const routes = [
+                            "{{ url_for('business_unit_assets_by_type', country_code=selected_unit.code, asset_type='IT') }}",
+                            "{{ url_for('business_unit_assets_by_type', country_code=selected_unit.code, asset_type='Infrastructure') }}",
+                            "{{ url_for('business_unit_assets_by_type', country_code=selected_unit.code, asset_type='Fixed') }}",
+                            "{{ url_for('business_unit_assets_by_type', country_code=selected_unit.code, asset_type='Shared') }}"
+                        ];
+                        window.location.href = routes[config.dataPointIndex];
+                    }
+                }
+            },
+            series: [
+                {{ asset_category_data.it_pct|default(0) }},
+                {{ asset_category_data.infrastructure_pct|default(0) }},
+                {{ asset_category_data.fixed_pct|default(0) }},
+                {{ asset_category_data.ip_pct|default(0) }}
+            ],
+            labels: ['IT', 'Infrastructure', 'Fixed', 'IP'],
+            colors: [
+                chartPalette.primary,
+                chartPalette.info,
+                chartPalette.warning,
+                chartPalette.ip
+            ],
+            plotOptions: {
+                radialBar: {
+                    hollow: {
+                        size: '35%'
+                    },
+                    track: {
+                        background: '#f3f4f6'
+                    },
+                    dataLabels: {
+                        name: {
+                            fontSize: '12px'
+                        },
+                        value: {
+                            fontSize: '16px',
+                            fontWeight: 800,
+                            formatter: function (val) {
+                                return Math.round(val) + '%';
+                            }
+                        },
+                        total: {
+                            show: true,
+                            label: 'Assets',
+                            formatter: function () {
+                                return '100%';
+                            }
+                        }
+                    }
+                }
+            }
+        }).render();
+    }
+    const warrantyStatusEl = document.querySelector('#warrantyStatusChart');
+    if (warrantyStatusEl) {
+        const hasWarrantyData = (warrantyData.pie_values || []).some(function (v) { return Number(v || 0) > 0; });
+        if (!hasWarrantyData) {
+            warrantyStatusEl.innerHTML = '<div class="d-flex align-items-center justify-content-center text-muted" style="height:285px;">No warranty data available for this business unit yet.</div>';
+        } else {
+            new ApexCharts(warrantyStatusEl, {
+                ...chartBaseOptions(),
+                chart: {
+                    ...chartBaseOptions().chart,
+                    type: 'donut',
+                    height: 285,
+                    events: {
+                        dataPointSelection: function (event, chartContext, config) {
+                            const routes = [
+                                "{{ url_for('warranty_report', filter='under') }}",
+                                "{{ url_for('warranty_report', filter='expiring') }}",
+                                "{{ url_for('warranty_report', filter='expired') }}"
+                            ];
+                            window.location.href = routes[config.dataPointIndex];
+                        }
+                    }
+                },
+                series: warrantyData.pie_values,
+                labels: warrantyData.pie_labels,
+                colors: [chartPalette.success, chartPalette.warning, chartPalette.danger],
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            size: '68%',
+                            labels: {
+                                show: true,
+                                total: {
+                                    show: true,
+                                    label: 'Assets',
+                                    formatter: function () {
+                                        return warrantyData.pie_values.reduce(function (sum, v) { return sum + Number(v || 0); }, 0);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                dataLabels: { enabled: false }
+            }).render();
+        }
+    }
+    const warrantyTrendEl = document.querySelector('#warrantyTrendChart');
+    if (warrantyTrendEl) {
+        const hasTrendData = (warrantyData.trend_counts || []).some(function (v) { return Number(v || 0) > 0; });
+        if (!hasTrendData) {
+            warrantyTrendEl.innerHTML = '<div class="d-flex align-items-center justify-content-center text-muted" style="height:285px;">No upcoming warranty expiries in the next 6 months.</div>';
+        } else {
+            new ApexCharts(warrantyTrendEl, {
+                ...chartBaseOptions(),
+                chart: {
+                    ...chartBaseOptions().chart,
+                    type: 'bar',
+                    height: 285,
+                    events: {
+                        dataPointSelection: function () {
+                            window.location.href = "{{ url_for('warranty_report') }}";
+                        }
+                    }
+                },
+                series: [{
+                    name: 'Assets Expiring',
+                    data: warrantyData.trend_counts
+                }],
+                xaxis: {
+                    categories: warrantyData.trend_labels,
+                    labels: { style: { colors: '#6b7280' } }
+                },
+                yaxis: {
+                    labels: {
+                        formatter: function (value) { return Math.round(value); },
+                        style: { colors: '#6b7280' }
+                    }
+                },
+                colors: [chartPalette.warning],
+                plotOptions: {
+                    bar: { borderRadius: 6, columnWidth: '55%' }
+                },
+                dataLabels: { enabled: false },
+                grid: { borderColor: '#e5e7eb', strokeDashArray: 4 }
+            }).render();
+        }
+    }
+    document.querySelectorAll('.category-wise-chart').forEach(function (el) {
+        const values = [
+            Number(el.dataset.assigned || 0),
+            Number(el.dataset.unassigned || 0),
+            Number(el.dataset.service || 0),
+            Number(el.dataset.warranty || 0),
+            Number(el.dataset.scrap || 0)
+        ];
+        new ApexCharts(el, {
+            ...chartBaseOptions(),
+            chart: {
+                ...chartBaseOptions().chart,
+                type: 'donut',
+                height: 235,
+                events: {
+                    dataPointSelection: function () {
+                        window.location.href = el.dataset.url;
+                    }
+                }
+            },
+            series: values,
+            labels: ['Assigned', 'Unassigned', 'Service', 'Warranty', 'Scrap'],
+            colors: [
+                chartPalette.success,
+                chartPalette.warning,
+                chartPalette.danger,
+                chartPalette.pink,
+                chartPalette.muted
+            ],
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '68%',
+                        labels: {
+                            show: true,
+                            total: {
+                                show: true,
+                                label: 'Total',
+                                formatter: function () {
+                                    return values.reduce((sum, item) => sum + item, 0);
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            dataLabels: {
+                enabled: false
+            },
+            legend: {
+                show: false
+            }
+        }).render();
+    });
+</script>
+{% endblock %}

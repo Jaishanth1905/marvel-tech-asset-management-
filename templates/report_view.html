@@ -1,0 +1,237 @@
+
+{% extends "base.html" %}
+{% block extra_css %}
+<style>
+    .report-table th {
+        background: var(--surface) !important;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .report-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('reports') }}">Reports</a></li>
+                <li class="breadcrumb-item active">{{ report_title }}</li>
+            </ol>
+        </nav>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h2 class="fw-bold">
+                    <i class="bi bi-file-earmark-text me-2 text-primary"></i>{{ report_title }}
+                </h2>
+                <p class="text-muted mb-0">{{ report_description }}</p>
+            </div>
+            <div class="report-actions">
+                <button class="btn btn-outline-secondary" onclick="exportTableToCSV('{{ report_type }}_report.csv')">
+                    <i class="bi bi-download me-1"></i>Export CSV
+                </button>
+                <button class="btn btn-marvel" onclick="exportReportPDF()">
+                    <i class="bi bi-file-earmark-pdf me-1"></i>Export PDF
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Report Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-table me-2"></i>Report Data</span>
+        <span class="badge bg-primary">{{ data|length }} Records</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle report-table" id="reportTable">
+                <thead>
+                    <tr>
+                        {% for col in columns %}
+                        <th>{{ col }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data %}
+                    <tr>
+                        {% for cell in row %}
+                        <td>{{ cell|safe }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="{{ columns|length }}" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                            No data found for this report
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+{% set pdf_logo_url = get_uploaded_image_url(selected_unit.logo) if selected_unit and selected_unit.logo and uploaded_image_exists(selected_unit.logo) else '' %}
+const pdfLogoUrl = {{ pdf_logo_url|tojson }};
+const pdfLogoHtml = pdfLogoUrl
+    ? `<img src="${pdfLogoUrl}" class="pdf-logo-img" alt="Business Unit Logo">`
+    : `<div class="pdf-logo-fallback">M</div>`;
+function getReportTable() {
+    return document.getElementById('reportTable');
+}
+function exportTableToCSV(filename) {
+    const table = getReportTable();
+    if (!table) {
+        alert('No report data available to export.');
+        return;
+    }
+    let csv = [];
+    const rows = table.querySelectorAll('tr');
+    for (let row of rows) {
+        const cols = row.querySelectorAll('td, th');
+        const rowData = [];
+        for (let col of cols) {
+            let text = col.innerText.replace(/"/g, '""').trim();
+            rowData.push('"' + text + '"');
+        }
+        csv.push(rowData.join(','));
+    }
+    const blob = new Blob([csv.join('\n')], {
+        type: 'text/csv;charset=utf-8;'
+    });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+function exportReportPDF() {
+    const table = getReportTable();
+    if (!table) {
+        alert('No report data available to export.');
+        return;
+    }
+    const reportTitle = "{{ report_title }}";
+    const clonedTable = table.cloneNode(true);
+    clonedTable.querySelectorAll('.badge, .btn').forEach(function (element) {
+        element.className = '';
+    });
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>MarvelTech ${reportTitle}</title>
+            <style>
+                @page {
+                    size: A4 landscape;
+                    margin: 14mm;
+                }
+                * {
+                    box-sizing: border-box;
+                }
+                body {
+                    font-family: Arial, sans-serif;
+                    color: #111827;
+                    background: #ffffff;
+                    margin: 0;
+                    padding: 0;
+                }
+                .report-header {
+                    text-align: center;
+                    margin-bottom: 22px;
+                    padding-bottom: 14px;
+                    border-bottom: 2px solid #b52025;
+                }
+                .logo-mark {
+    width: 76px;
+    height: 76px;
+    border-radius: 16px;
+    margin: 0 auto 10px;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+.pdf-logo-img {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+    display: block;
+}
+.pdf-logo-fallback {
+    width: 64px;
+    height: 64px;
+    border-radius: 14px;
+    background: #b52025;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 800;
+}
+                .brand {
+                    font-size: 28px;
+                    font-weight: 800;
+                    color: #b52025;
+                    margin-bottom: 4px;
+                }
+                h1 {
+                    margin: 4px 0;
+                    font-size: 22px;
+                }
+                h2 {
+                    margin: 0;
+                    font-size: 15px;
+                    color: #6b7280;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-size: 10px;
+                }
+                th {
+                    background: #f3f4f6;
+                    font-weight: 700;
+                    text-align: left;
+                }
+                th, td {
+                    border: 1px solid #d1d5db;
+                    padding: 7px;
+                    vertical-align: top;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="report-header">
+                <div class="logo-mark">${pdfLogoHtml}</div>
+<div class="brand">{{ selected_unit.company_name if selected_unit and selected_unit.company_name else 'MarvelTech' }}</div>
+<h1>${reportTitle}</h1>
+<h2>Enterprise Asset Management · Report Data</h2>
+            </div>
+            ${clonedTable.outerHTML}
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(function () {
+        printWindow.print();
+    }, 300);
+}
+</script>
+{% endblock %}

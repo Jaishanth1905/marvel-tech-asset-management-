@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Login - MarvelTech</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body {
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at top left, rgba(181,32,37,.16), transparent 34%),
+                #f3f4f6;
+            display: flex;
+            align-items: center;
+            font-family: Inter, Arial, sans-serif;
+        }
+        .login-card {
+            max-width: 430px;
+            margin: auto;
+            border: 0;
+            border-radius: 24px;
+            box-shadow: 0 24px 70px rgba(17,24,39,.12);
+        }
+        .btn-marvel {
+            background: #B52025;
+            border-color: #B52025;
+            color: white;
+            font-weight: 700;
+        }
+        .brand {
+            font-size: 1.7rem;
+            font-weight: 800;
+            color: #B52025;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card login-card">
+        <div class="card-body p-4 p-md-5">
+            <div class="text-center mb-4">
+                <div class="brand">
+                    <i class="bi bi-shield-check me-2"></i>MarvelTech
+                </div>
+                <p class="text-muted mb-0">Employee Ticket Portal</p>
+            </div>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Employee ID</label>
+                    <input
+                        type="text"
+                        name="employee_code"
+                        class="form-control form-control-lg"
+                        required
+                        autofocus
+                        placeholder="EMP001">
+                </div>
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Password</label>
+                    <input
+                        type="password"
+                        name="password"
+                        class="form-control form-control-lg"
+                        required>
+                </div>
+                <button class="btn btn-marvel btn-lg w-100">
+                    <i class="bi bi-box-arrow-in-right me-1"></i>Login
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

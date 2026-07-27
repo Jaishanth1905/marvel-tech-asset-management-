@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="{{ url_for('index') }}">Dashboard</a>
+                </li>
+                <li class="breadcrumb-item active">Logs</li>
+            </ol>
+        </nav>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h2 class="fw-bold">
+                    <i class="bi bi-clock-history me-2 text-primary"></i>Log Report
+                </h2>
+                <p class="text-muted mb-0">
+                    Track system activity across assets, employees, vendors, business units, service, and scrap actions
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary" onclick="exportLogsCSV()">
+                    <i class="bi bi-download me-1"></i>Export CSV
+                </button>
+                <button class="btn btn-marvel" onclick="exportLogsPDF()">
+                    <i class="bi bi-file-earmark-pdf me-1"></i>Export PDF
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="bi bi-funnel me-2"></i>Filters
+    </div>
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('logs_list') }}">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Action</label>
+                    <select name="action" class="form-select">
+                        <option value="">All Actions</option>
+                        {% for action in actions %}
+                        <option value="{{ action }}" {{ 'selected' if action_filter == action else '' }}>
+                            {{ action }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Module</label>
+                    <select name="module" class="form-select">
+                        <option value="">All Modules</option>
+                        {% for module in modules %}
+                        <option value="{{ module }}" {{ 'selected' if module_filter == module else '' }}>
+                            {{ module }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">User</label>
+                    <select name="user" class="form-select">
+                        <option value="">All Users</option>
+                        {% for user in users %}
+                        <option value="{{ user }}" {{ 'selected' if user_filter == user else '' }}>
+                            {{ user }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">From</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">To</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Search</label>
+                    <input
+                        type="text"
+                        name="search"
+                        class="form-control"
+                        value="{{ search }}"
+                        placeholder="Asset ID, name, action...">
+                </div>
+                <div class="col-12 d-flex gap-2 justify-content-end">
+                    <a href="{{ url_for('logs_list') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle me-1"></i>Clear
+                    </a>
+                    <button type="submit" class="btn btn-marvel">
+                        <i class="bi bi-search me-1"></i>Apply Filters
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- Logs Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>
+            <i class="bi bi-table me-2"></i>System Activity
+        </span>
+        <span class="badge bg-primary">
+            {{ logs|length }} Records
+        </span>
+    </div>
+    <div class="card-body p-0">
+        {% if logs %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle" id="logsTable">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Module</th>
+                        <th>Record</th>
+                        <th>Description</th>
+                        <th>IP Address</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td>
+                            <span class="fw-bold">
+                                {{ log.created_at.strftime('%d-%b-%Y') if log.created_at else '-' }}
+                            </span>
+                            <small class="text-muted d-block">
+                                {{ log.created_at.strftime('%H:%M:%S') if log.created_at else '-' }}
+                            </small>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">
+                                {{ log.user or 'Admin' }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if log.action in ['CREATE', 'ASSIGN'] %}
+                                <span class="badge bg-success">{{ log.action }}</span>
+                            {% elif log.action in ['UPDATE', 'RETURN', 'RETURN_SERVICE'] %}
+                                <span class="badge bg-info">{{ log.action }}</span>
+                            {% elif log.action in ['DELETE', 'SCRAP'] %}
+                                <span class="badge bg-danger">{{ log.action }}</span>
+                            {% elif log.action == 'SERVICE' %}
+                                <span class="badge bg-warning">{{ log.action }}</span>
+                            {% else %}
+                                <span class="badge bg-primary">{{ log.action }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="fw-bold">{{ log.module }}</span>
+                        </td>
+                        <td>
+                            <span class="fw-bold text-primary">
+                                {{ log.record_name or '-' }}
+                            </span>
+                            {% if log.record_id %}
+                            <small class="text-muted d-block">
+                                ID: {{ log.record_id }}
+                            </small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ log.description or '-' }}
+                        </td>
+                        <td>
+                            <small class="text-muted">
+                                {{ log.ip_address or '-' }}
+                            </small>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-clock-history display-4 d-block mb-3"></i>
+            <h5>No logs found</h5>
+            <p class="mb-0">System actions will appear here once activity is recorded.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+{% set pdf_logo_url = get_uploaded_image_url(selected_unit.logo) if selected_unit and selected_unit.logo and uploaded_image_exists(selected_unit.logo) else '' %}
+const pdfLogoUrl = {{ pdf_logo_url|tojson }};
+const pdfLogoHtml = pdfLogoUrl
+    ? `<img src="${pdfLogoUrl}" class="pdf-logo-img" alt="Business Unit Logo">`
+    : `<div class="pdf-logo-fallback">M</div>`;
+function getLogsTable() {
+    return document.getElementById('logsTable');
+}
+function exportLogsCSV() {
+    const table = getLogsTable();
+    if (!table) {
+        alert('No logs available to export.');
+        return;
+    }
+    let csv = [];
+    const rows = table.querySelectorAll('tr');
+    for (let row of rows) {
+        const cols = row.querySelectorAll('td, th');
+        const rowData = [];
+        for (let col of cols) {
+            let text = col.innerText.replace(/"/g, '""').trim();
+            rowData.push('"' + text + '"');
+        }
+        csv.push(rowData.join(','));
+    }
+    const blob = new Blob([csv.join('\n')], {
+        type: 'text/csv;charset=utf-8;'
+    });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'log_reports.csv';
+    link.click();
+}
+function exportLogsPDF() {
+    const table = getLogsTable();
+    if (!table) {
+        alert('No logs available to export.');
+        return;
+    }
+    const clonedTable = table.cloneNode(true);
+    clonedTable.querySelectorAll('.badge').forEach(function (badge) {
+        badge.className = '';
+    });
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>{{ selected_unit.company_name if selected_unit and selected_unit.company_name else 'MarvelTech' }} Log Reports</title>
+            <style>
+                @page {
+                    size: A4 landscape;
+                    margin: 14mm;
+                }
+                * {
+                    box-sizing: border-box;
+                }
+                body {
+                    font-family: Arial, sans-serif;
+                    color: #111827;
+                    background: #ffffff;
+                    margin: 0;
+                    padding: 0;
+                }
+                .report-header {
+                    text-align: center;
+                    margin-bottom: 22px;
+                    padding-bottom: 14px;
+                    border-bottom: 2px solid #b52025;
+                }
+                .logo-mark {
+        width: 76px;
+        height: 76px;
+        border-radius: 16px;
+        margin: 0 auto 10px;
+        background: #ffffff;
+        border: 1px solid #d1d5db;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    .pdf-logo-img {
+        width: 64px;
+        height: 64px;
+        object-fit: contain;
+        display: block;
+    }
+    .pdf-logo-fallback {
+        width: 64px;
+        height: 64px;
+        border-radius: 14px;
+        background: #b52025;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        font-weight: 800;
+    }
+                    .brand {
+                        font-size: 28px;
+                        font-weight: 800;
+                        color: #b52025;
+                        margin-bottom: 4px;
+                    }
+                    h1 {
+                        margin: 4px 0;
+                        font-size: 22px;
+                    }
+                    h2 {
+                        margin: 0;
+                        font-size: 15px;
+                        color: #6b7280;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                    font-size: 10px;
+                }
+                th {
+                    background: #f3f4f6;
+                    font-weight: 700;
+                    text-align: left;
+                }
+                th, td {
+                    border: 1px solid #d1d5db;
+                    padding: 7px;
+                    vertical-align: top;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="report-header">
+                <div class="logo-mark">${pdfLogoHtml}</div>
+<div class="brand">{{ selected_unit.company_name if selected_unit and selected_unit.company_name else 'MarvelTech' }}</div>
+<h1>Log Reports</h1>
+<h2>Enterprise Asset Management · System Activity</h2>
+            </div>
+            ${clonedTable.outerHTML}
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(function () {
+        printWindow.print();
+    }, 300);
+}
+</script>
+{% endblock %}

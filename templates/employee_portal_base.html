@@ -1,0 +1,226 @@
+{% set portal_title = portal_title|default('Employee Portal') %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ portal_title }} - MarvelTech</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #B52025;
+            --primary-dark: #8a181c;
+            --surface: #f8fafc;
+            --border: #e5e7eb;
+            --text: #111827;
+            --muted: #6b7280;
+        }
+        body {
+            font-family: Inter, sans-serif;
+            background: #f3f4f6;
+            color: var(--text);
+        }
+        .portal-shell {
+            min-height: 100vh;
+            display: flex;
+        }
+        .portal-sidebar {
+            width: 260px;
+            background: #111827;
+            color: white;
+            padding: 1.25rem;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+        }
+        .portal-brand {
+            font-weight: 800;
+            font-size: 1.25rem;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            margin-bottom: 1.5rem;
+        }
+        .portal-nav a {
+            display: flex;
+            align-items: center;
+            gap: .65rem;
+            color: #d1d5db;
+            text-decoration: none;
+            padding: .8rem .9rem;
+            border-radius: 12px;
+            margin-bottom: .35rem;
+            font-weight: 700;
+        }
+        .portal-nav a:hover,
+        .portal-nav a.active {
+            background: var(--primary);
+            color: white;
+        }
+        .portal-main {
+            flex: 1;
+            padding: 1.5rem;
+        }
+        .portal-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+        .card {
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: 0 12px 35px rgba(17,24,39,.05);
+        }
+        .btn-marvel {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+            font-weight: 700;
+        }
+        .btn-marvel:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+            color: #fff;
+        }
+        .metric-card {
+            border-left: 4px solid var(--primary);
+        }
+        @media(max-width: 768px) {
+            .portal-shell {
+                display: block;
+            }
+            .portal-sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            .portal-main {
+                padding: 1rem;
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+<div class="portal-shell">
+    <aside class="portal-sidebar">
+       <a class="portal-brand" href="{{ url_for('employee_portal_dashboard') }}">
+    {% if employee.business_unit_ref and employee.business_unit_ref.logo and uploaded_image_exists(employee.business_unit_ref.logo) %}
+    <img
+        src="{{ get_uploaded_image_url(employee.business_unit_ref.logo) }}"
+        alt="{{ employee.business_unit_ref.company_name or employee.business_unit_ref.name }}"
+        style="width: 34px; height: 34px; object-fit: contain; border-radius: 8px; background: white;">
+{% else %}
+    <i class="bi bi-shield-check"></i>
+{% endif %}
+    <span>
+        {% if employee.business_unit_ref and employee.business_unit_ref.company_name %}
+            {{ employee.business_unit_ref.company_name }}
+        {% else %}
+            MarvelTech
+
+            {% endif %}
+
+        </span>
+    </a>
+
+    <div class="small text-secondary mb-3">
+    Employee Portal
+</div>
+        <nav class="portal-nav">
+    <a href="{{ url_for('employee_portal_dashboard') }}">
+        <i class="bi bi-grid"></i>Dashboard
+    </a>
+    <a href="{{ url_for('employee_my_assets') }}">
+        <i class="bi bi-laptop"></i>My Assets
+    </a>
+    <a href="{{ url_for('employee_my_tickets') }}">
+        <i class="bi bi-ticket-detailed"></i>Tickets
+    </a>
+    <a href="{{ url_for('employee_logout') }}">
+        <i class="bi bi-box-arrow-right"></i>Logout
+    </a>
+</nav>
+    </aside>
+    <main class="portal-main">
+        <div class="portal-top">
+            <div>
+                <h3 class="fw-bold mb-0">{{ portal_title }}</h3>
+                {% if employee %}
+                <div class="text-muted">
+                    {{ employee.name }} · {{ employee.employee_code }}
+                </div>
+                {% endif %}
+            </div>
+            <div class="dropdown">
+                <button
+                    class="btn btn-outline-secondary position-relative d-flex align-items-center justify-content-center dropdown-toggle"
+                    type="button"
+                    id="employeeNotificationBell"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    style="width: 44px; height: 44px; border-radius: 12px;">
+                    <i class="bi bi-bell"></i>
+                    {% if employee_notification_count is defined and employee_notification_count %}
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                        {{ employee_notification_count if employee_notification_count <= 9 else '9+' }}
+                    </span>
+                    {% endif %}
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" style="min-width: 300px;" aria-labelledby="employeeNotificationBell">
+                    <li><h6 class="dropdown-header">Notifications</h6></li>
+                    {% for activity in employee_recent_notifications %}
+                    <li>
+                        <a class="dropdown-item" href="{{ url_for('employee_ticket_detail', ticket_id=activity.ticket_id) }}">
+                            <div class="small fw-bold">
+                                {% if activity.action == 'Approved' %}✅{% elif activity.action == 'Rejected' %}❌{% elif activity.action == 'In Service' %}🛠{% elif activity.action == 'Received by Admin' %}📦{% elif activity.action == 'Ticket Closed' %}🎉{% else %}🔔{% endif %}
+                                {{ activity.ticket.ticket_id }}
+                            </div>
+                            <div class="text-muted" style="font-size: 0.75rem;">
+                                {{ activity.action }} · {{ activity.created_at.strftime('%d %b, %I:%M %p') }}
+                            </div>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li><span class="dropdown-item-text text-muted small">No notifications yet.</span></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const bell = document.getElementById('employeeNotificationBell');
+    if (bell) {
+        bell.addEventListener('shown.bs.dropdown', function () {
+            fetch("{{ url_for('employee_mark_notifications_read') }}", { method: 'POST' })
+                .then(function () {
+                    const badge = bell.querySelector('.badge');
+                    if (badge) badge.remove();
+                })
+                .catch(function () {});
+        });
+    }
+});
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

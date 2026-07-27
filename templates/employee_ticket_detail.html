@@ -1,0 +1,83 @@
+{% extends "employee_portal_base.html" %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">{{ ticket.ticket_id }}</h4>
+        <p class="text-muted mb-0">
+            Ticket created on {{ ticket.created_at.strftime('%d %B %Y, %I:%M %p') }}
+        </p>
+    </div>
+    <a href="{{ url_for('employee_my_tickets') }}" class="btn btn-outline-secondary">
+        Back to Tickets
+    </a>
+</div>
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-3">Issue Details</h5>
+                <div class="mb-3">
+                    <div class="small text-muted">Asset</div>
+                    <div class="fw-bold">
+                        {{ ticket.asset.asset_id }} — {{ ticket.asset.asset_name }}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="small text-muted">Description</div>
+                    <div>{{ ticket.description }}</div>
+                </div>
+                {% if ticket.attachment_path %}
+                <a href="{{ url_for('ticket_attachment', filename=ticket.attachment_path) }}"
+                   class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-paperclip me-1"></i>Download Attachment
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-3">Ticket Timeline</h5>
+                {% for activity in ticket.activities %}
+                <div class="border-start ps-3 pb-4 position-relative">
+                    <span class="position-absolute top-0 translate-middle rounded-circle bg-danger"
+                          style="width: 12px; height: 12px;"></span>
+                    <div class="fw-bold">{{ activity.action }}</div>
+                    <div class="small text-muted">
+                        {{ activity.created_at.strftime('%d %b %Y, %I:%M %p') }}
+                        · {{ activity.performed_by }}
+                    </div>
+                    {% if activity.remarks %}
+                    <div class="small mt-1">{{ activity.remarks }}</div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No ticket activity recorded.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-3">Ticket Status</h5>
+                <div class="mb-3">
+                    <div class="small text-muted">Category</div>
+                    <div class="fw-bold">{{ ticket.category }}</div>
+                </div>
+                <div class="mb-3">
+                    <div class="small text-muted">Priority</div>
+                    <div class="fw-bold">{{ ticket.priority }}</div>
+                </div>
+                <div class="mb-3">
+                    <div class="small text-muted">Status</div>
+                    <div class="fw-bold">{{ ticket.status }}</div>
+                </div>
+                <div>
+                    <div class="small text-muted">Assigned Engineer</div>
+                    <div class="fw-bold">{{ ticket.assigned_engineer or 'Not assigned yet' }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

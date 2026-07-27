@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('depreciation_dashboard') }}">Depreciation</a></li>
+                <li class="breadcrumb-item active">Depreciation History</li>
+            </ol>
+        </nav>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h2 class="fw-bold">
+                    <i class="bi bi-graph-down-arrow me-2 text-primary"></i>Depreciation History
+                </h2>
+                <p class="text-muted mb-0">
+                    {{ asset.asset_id }} · {{ asset.asset_name }}
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('asset_depreciation', asset_id=asset.id) }}" class="btn btn-outline-primary">
+                    <i class="bi bi-gear me-1"></i>Settings
+                </a>
+                <a href="{{ url_for('depreciation_dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Back
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Asset Summary -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card h-100 text-center p-3" style="border-left: 3px solid var(--primary);">
+            <h6 class="text-muted mb-2">Purchase Date</h6>
+            <h5 class="fw-bold mb-0">
+                {{ asset.purchase_date|format_date if asset.purchase_date else '-' }}
+            </h5>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 text-center p-3" style="border-left: 3px solid #059669;">
+            <h6 class="text-muted mb-2">Purchase Value</h6>
+            <h5 class="fw-bold text-success mb-0">
+                {{ history_data.purchase_value|format_currency }}
+            </h5>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 text-center p-3" style="border-left: 3px solid #d97706;">
+            <h6 class="text-muted mb-2">Useful Life</h6>
+            <h5 class="fw-bold text-warning mb-0">
+                {{ history_data.useful_life }} Years
+            </h5>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 text-center p-3" style="border-left: 3px solid #0891b2;">
+            <h6 class="text-muted mb-2">Method</h6>
+            <h5 class="fw-bold text-info mb-0">
+                {{ history_data.method }}
+            </h5>
+        </div>
+    </div>
+</div>
+<!-- Chart + Table -->
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-graph-down me-2"></i>Book Value Trend
+            </div>
+            <div class="card-body">
+                <div id="depreciationHistoryChart" style="min-height: 340px;"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-table me-2"></i>Depreciation Timeline
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th>Date / Year</th>
+                                <th>Depreciation</th>
+                                <th>Book Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in history_data.history %}
+                            <tr>
+                                <td class="fw-bold">{{ row.label }}</td>
+                                <td class="text-danger fw-bold">{{ row.depreciation|format_currency }}</td>
+                                <td class="text-success fw-bold">{{ row.book_value|format_currency }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.0/dist/apexcharts.min.js"></script>
+<script>
+const depreciationHistory = {{ history_data.history|tojson }};
+new ApexCharts(document.querySelector("#depreciationHistoryChart"), {
+    chart: {
+        type: 'line',
+        height: 340,
+        fontFamily: 'Inter, sans-serif',
+        toolbar: {
+            show: false
+        },
+        zoom: {
+            enabled: false
+        }
+    },
+    series: [
+        {
+            name: 'Book Value',
+            data: depreciationHistory.map(function (item) {
+                return {
+                    x: item.label,
+                    y: Number(item.book_value || 0)
+                };
+            })
+        }
+    ],
+    colors: ['#b52025'],
+    stroke: {
+        width: 4,
+        curve: 'smooth'
+    },
+    markers: {
+        size: 5,
+        strokeWidth: 2,
+        hover: {
+            size: 8
+        }
+    },
+    xaxis: {
+        type: 'category',
+        labels: {
+            style: {
+                colors: '#6b7280'
+            }
+        }
+    },
+    yaxis: {
+        labels: {
+            formatter: function (value) {
+                return Number(value || 0).toLocaleString();
+            },
+            style: {
+                colors: '#6b7280'
+            }
+        }
+    },
+    grid: {
+        borderColor: '#e5e7eb',
+        strokeDashArray: 4
+    },
+    dataLabels: {
+        enabled: false
+    },
+    tooltip: {
+        theme: 'light',
+        y: {
+            formatter: function (value) {
+                return Number(value || 0).toLocaleString();
+            }
+        }
+    }
+}).render();
+</script>
+{% endblock %}

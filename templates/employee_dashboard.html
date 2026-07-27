@@ -1,0 +1,178 @@
+{% extends "employee_portal_base.html" %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Welcome, {{ employee.name }}</h4>
+        <p class="text-muted mb-0">
+            Here is an overview of your assigned assets and support requests.
+        </p>
+    </div>
+    <a href="{{ url_for('employee_raise_ticket') }}" class="btn btn-marvel">
+        <i class="bi bi-plus-circle me-1"></i>
+        Raise Ticket
+    </a>
+</div>
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card metric-card h-100">
+            <div class="card-body">
+                <div class="text-muted small fw-bold text-uppercase mb-2">
+                    Assigned Assets
+                </div>
+                <div class="display-6 fw-bold">{{ assigned_assets|length }}</div>
+                <a href="{{ url_for('employee_my_assets') }}"
+                   class="small text-decoration-none">
+                    View my assets
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card metric-card h-100">
+            <div class="card-body">
+                <div class="text-muted small fw-bold text-uppercase mb-2">
+                    Open Tickets
+                </div>
+                <div class="display-6 fw-bold text-warning">
+                    {{ open_tickets|length }}
+                </div>
+                <a href="{{ url_for('employee_my_tickets') }}"
+                   class="small text-decoration-none">
+                    View my tickets
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card metric-card h-100">
+            <div class="card-body">
+                <div class="text-muted small fw-bold text-uppercase mb-2">
+                    Resolved Tickets
+                </div>
+                <div class="display-6 fw-bold text-success">
+                    {{ resolved_tickets|length }}
+                </div>
+                <a href="{{ url_for('employee_my_tickets') }}"
+                   class="small text-decoration-none">
+                    View ticket history
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold mb-1">My Assigned Assets</h5>
+                        <p class="text-muted small mb-0">
+                            Assets currently assigned to you.
+                        </p>
+                    </div>
+                    <a href="{{ url_for('employee_my_assets') }}"
+                       class="btn btn-sm btn-outline-secondary">
+                        View All
+                    </a>
+                </div>
+            </div>
+            <div class="card-body px-4 pb-4">
+                {% if assigned_assets %}
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead>
+                                <tr class="text-muted small">
+                                    <th>Asset ID</th>
+                                    <th>Asset Name</th>
+                                    <th>Model</th>
+                                    <th>Assigned Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for assignment in assigned_assets[:5] %}
+                                <tr>
+                                    <td class="fw-bold">
+                                        {{ assignment.asset.asset_id }}
+                                    </td>
+                                    <td>{{ assignment.asset.asset_name }}</td>
+                                    <td>
+                                        {{ assignment.asset.model_name or '—' }}
+                                    </td>
+                                    <td>
+                                        {{ assignment.assigned_date.strftime('%d %b %Y') }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-laptop fs-1 text-muted"></i>
+                        <p class="text-muted mt-2 mb-0">
+                            No assets are currently assigned to you.
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold mb-1">Recent Ticket Activity</h5>
+                        <p class="text-muted small mb-0">
+                            Latest updates on your requests.
+                        </p>
+                    </div>
+                    <a href="{{ url_for('employee_my_tickets') }}"
+                       class="btn btn-sm btn-outline-secondary">
+                        Tickets
+                    </a>
+                </div>
+            </div>
+            <div class="card-body px-4 pb-4">
+                {% if recent_activities %}
+                    <div class="list-group list-group-flush">
+                        {% for activity in recent_activities %}
+                        <div class="list-group-item px-0">
+                            <div class="d-flex justify-content-between gap-3">
+                                <div>
+                                    <div class="fw-bold">
+                                        {{ activity.action }}
+                                    </div>
+                                    <div class="small text-muted">
+                                        {{ activity.ticket.ticket_id }}
+                                        {% if activity.new_status %}
+                                            · {{ activity.new_status }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <small class="text-muted text-nowrap">
+                                    {{ activity.created_at.strftime('%d %b') }}
+                                </small>
+                            </div>
+                            {% if activity.remarks %}
+                            <div class="small text-muted mt-1">
+                                {{ activity.remarks }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-ticket-detailed fs-1 text-muted"></i>
+                        <p class="text-muted mt-2 mb-0">
+                            No ticket activity yet.
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

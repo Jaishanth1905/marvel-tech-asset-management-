@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Depreciation</li>
+            </ol>
+        </nav>
+        <h2 class="fw-bold"><i class="bi bi-graph-down me-2 text-primary"></i>Asset Depreciation</h2>
+        <p class="text-muted">Track asset value depreciation across all business units</p>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card h-100 text-center p-3" style="border-left: 3px solid var(--primary);">
+            <h6 class="text-muted mb-2">Total Purchase Value</h6>
+            <h4 class="fw-bold text-primary">{{ total_purchase|format_currency }}</h4>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 text-center p-3" style="border-left: 3px solid #059669;">
+            <h6 class="text-muted mb-2">Total Current Value</h6>
+            <h4 class="fw-bold text-success">{{ total_current|format_currency }}</h4>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 text-center p-3" style="border-left: 3px solid #dc2626;">
+            <h6 class="text-muted mb-2">Total Depreciated</h6>
+        <h4 class="fw-bold text-danger">{{ total_accumulated|format_currency }}</h4>
+        </div>
+    </div>
+</div>
+
+<!-- Depreciation Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-table me-2"></i>Asset Depreciation Details</span>
+        <span class="badge bg-primary">{{ dep_data|length }} Assets</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>Asset ID</th>
+                        <th>Asset Name</th>
+                        <th>Purchase Value</th>
+                        <th>Years Owned</th>
+                        <th>Depreciation %</th>
+                        <th>Accumulated</th>
+                        <th>Current Value</th>
+                        <th>Remaining</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in dep_data %}
+                    <tr>
+                        <td class="fw-bold text-primary">{{ item.asset.asset_id }}</td>
+                        <td>{{ item.asset.asset_name }}</td>
+                        <td>{{ item.depreciation.purchase_value|format_currency }}</td>
+                        <td>{{ item.depreciation.years_owned }}</td>
+                        <td>{{ item.depreciation.depreciation_rate }}%</td>
+                        <td class="text-danger fw-bold">{{ item.depreciation.accumulated_depreciation|format_currency }}</td>
+                        <td class="text-success fw-bold">{{ item.depreciation.current_value|format_currency }}</td>
+                        <td class="text-primary fw-bold">{{ item.depreciation.remaining_value|format_currency }}</td>
+                        <td>
+    <div class="d-flex gap-1">
+        <a href="{{ url_for('asset_depreciation_history', asset_id=item.asset.id) }}"
+           class="btn btn-sm btn-outline-primary"
+           title="View Depreciation History">
+            <i class="bi bi-eye"></i>
+        </a>
+        <a href="{{ url_for('asset_depreciation', asset_id=item.asset.id) }}"
+           class="btn btn-sm btn-outline-secondary"
+           title="Depreciation Settings">
+            <i class="bi bi-gear"></i>
+        </a>
+    </div>
+</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center py-5 text-muted">
+                            <i class="bi bi-graph-down display-4 d-block mb-2"></i>
+                            No depreciation data available
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

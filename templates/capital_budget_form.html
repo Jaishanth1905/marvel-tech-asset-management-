@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('capital_budget_dashboard') }}">Capital Budget</a></li>
+                <li class="breadcrumb-item active">{{ 'Edit' if budget else 'Add' }} Budget</li>
+            </ol>
+        </nav>
+        <h2 class="fw-bold">
+            <i class="bi bi-{{ 'pencil' if budget else 'plus-circle' }} me-2 text-primary"></i>
+            {{ 'Edit' if budget else 'Add New' }} Capital Budget
+        </h2>
+        <p class="text-muted mb-0">
+            {{ selected_unit.country_flag or '' }} {{ selected_unit.name }}
+        </p>
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-cash-stack me-2"></i>Budget Details
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <input type="hidden" name="business_unit_id" value="{{ selected_unit.id }}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Business Unit</label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                value="{{ selected_unit.country_flag or '' }} {{ selected_unit.name }}"
+                                disabled>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Fiscal Year</label>
+                            <input
+                                type="text"
+                                name="fiscal_year"
+                                class="form-control"
+                                value="{{ budget.fiscal_year if budget else fiscal_year }}"
+                                placeholder="2026-2027">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Total Allocated Budget <span class="text-danger">*</span></label>
+                            <input
+                                type="number"
+                                name="allocated_budget"
+                                class="form-control"
+                                step="0.01"
+                                required
+                                value="{{ budget.allocated_budget if budget else '' }}"
+                                placeholder="1000000">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Status</label>
+                            <select name="status" class="form-select">
+                                <option value="Active" {{ 'selected' if budget and budget.status == 'Active' else '' }}>Active</option>
+                                <option value="Draft" {{ 'selected' if budget and budget.status == 'Draft' else '' }}>Draft</option>
+                                <option value="Closed" {{ 'selected' if budget and budget.status == 'Closed' else '' }}>Closed</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <hr>
+                            <h6 class="fw-bold text-primary mb-0">Budget Allocation by Asset Type</h6>
+                            <small class="text-muted">Leave all four empty to auto-split as 40%, 30%, 20%, 10%.</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">IT Assets Budget</label>
+                            <input
+                                type="number"
+                                name="it_budget"
+                                class="form-control"
+                                step="0.01"
+                                value="{{ budget.it_budget if budget else '' }}"
+                                placeholder="Auto 40%">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Infrastructure Assets Budget</label>
+                            <input
+                                type="number"
+                                name="infrastructure_budget"
+                                class="form-control"
+                                step="0.01"
+                                value="{{ budget.infrastructure_budget if budget else '' }}"
+                                placeholder="Auto 30%">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Fixed Assets Budget</label>
+                            <input
+                                type="number"
+                                name="fixed_budget"
+                                class="form-control"
+                                step="0.01"
+                                value="{{ budget.fixed_budget if budget else '' }}"
+                                placeholder="Auto 20%">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">IP Assets Budget</label>
+                            <input
+                                type="number"
+                                name="shared_budget"
+                                class="form-control"
+                                step="0.01"
+                                value="{{ budget.shared_budget if budget else '' }}"
+                                placeholder="Auto 10%">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Notes</label>
+                            <textarea name="notes" class="form-control" rows="2">{{ budget.notes if budget else '' }}</textarea>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 justify-content-end mt-4">
+                        <a href="{{ url_for('capital_budget_dashboard') }}" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-marvel">
+                            <i class="bi bi-check-lg me-1"></i>{{ 'Update' if budget else 'Create' }} Budget
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends "employee_portal_base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Raise Ticket</h4>
+        <p class="text-muted mb-0">
+            Submit an issue for an asset assigned to you.
+        </p>
+    </div>
+    <a href="{{ url_for('employee_my_tickets') }}" class="btn btn-outline-secondary">
+        Back to Tickets
+    </a>
+</div>
+<div class="card">
+    <div class="card-body p-4">
+        {% if assignments %}
+        <form method="POST" enctype="multipart/form-data">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Asset</label>
+                    <select name="asset_id" class="form-select" required>
+                        <option value="">Select assigned asset</option>
+                        {% for assignment in assignments %}
+                        <option value="{{ assignment.asset.id }}">
+                            {{ assignment.asset.asset_id }} — {{ assignment.asset.asset_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Category</label>
+                    <select name="category" id="ticketCategory" class="form-select" required onchange="toggleAttachmentRequired()">
+                        <option value="">Select category</option>
+                        <option value="Incident">Incident</option>
+                        <option value="Service">Service</option>
+                        <option value="Asset Replacement">Asset Replacement</option>
+                        <option value="Software Request">Software Request</option>
+                        <option value="Access Request">Access Request</option>
+                        <option value="Network Issue">Network Issue</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Priority</label>
+                    <select name="priority" class="form-select" required>
+                        <option value="Low">Low</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="High">High</option>
+                        <option value="Critical">Critical</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-bold">Description</label>
+                    <textarea name="description"
+                              class="form-control"
+                              rows="6"
+                              placeholder="Describe the issue clearly..."
+                              required></textarea>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-bold" id="attachmentLabel">Attachment <span class="text-muted fw-normal">(Optional)</span></label>
+                    <input type="file" name="attachment" id="attachmentInput" class="form-control">
+                    <div class="form-text">
+                        Allowed: PDF, PNG, JPG, DOC, DOCX, XLSX, or TXT.
+                        <span id="attachmentHint" class="text-danger fw-bold" style="display:none;"> — Required for Incident tickets.</span>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-marvel">
+                        <i class="bi bi-send me-1"></i>Submit Ticket
+                    </button>
+                </div>
+            </div>
+        </form>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-exclamation-triangle fs-1 text-warning"></i>
+            <h5 class="fw-bold mt-3">No assigned asset found</h5>
+            <p class="text-muted mb-0">
+                You can raise a ticket only for assets assigned to you.
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% block extra_js %}
+<script>
+function toggleAttachmentRequired() {
+    const category = document.getElementById('ticketCategory').value;
+    const input = document.getElementById('attachmentInput');
+    const label = document.getElementById('attachmentLabel');
+    const hint = document.getElementById('attachmentHint');
+    if (category === 'Incident') {
+        input.setAttribute('required', 'required');
+        label.innerHTML = 'Attachment <span class="text-danger fw-normal">(Required for Incident)</span>';
+        hint.style.display = 'inline';
+    } else {
+        input.removeAttribute('required');
+        label.innerHTML = 'Attachment <span class="text-muted fw-normal">(Optional)</span>';
+        hint.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}
+{% endblock %}

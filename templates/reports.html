@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    .report-category-card {
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+}
+    .report-category-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 20px 50px rgba(181, 32, 37, 0.1);
+        border-color: var(--primary);
+    }
+    .report-sub-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .report-sub-list li {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border);
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .report-sub-list li:last-child {
+        border-bottom: none;
+    }
+    .report-sub-list li:hover {
+        background: rgba(181, 32, 37, 0.03);
+    }
+    .report-sub-list a {
+        color: var(--text-primary);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        width: 100%;
+    }
+    .report-sub-list a:hover {
+        color: var(--primary);
+    }
+    .report-icon-sm {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+    .report-header {
+        padding: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .report-header i {
+        font-size: 1.5rem;
+    }
+    .report-header h5 {
+        margin: 0;
+        font-weight: 700;
+    }
+    .report-count {
+        margin-left: auto;
+        font-size: 0.75rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        background: #f3f4f6;
+        color: var(--text-secondary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Reports</li>
+            </ol>
+        </nav>
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold"><i class="bi bi-graph-up me-2 text-primary"></i>Reports</h2>
+                <p class="text-muted">
+                    {% if selected_unit %}{{ selected_unit.company_name or selected_unit.name }} ·{% endif %}
+                    Generate and view asset management reports
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Categories - Business Unit Style -->
+<div class="row g-4">
+
+    <!-- Asset Reports -->
+    <div class="col-md-4">
+        <div class="card report-category-card h-100">
+            <div class="report-header" style="background: rgba(181,32,37,0.08);">
+                <div class="report-icon-sm icon-box-primary">
+                    <i class="bi bi-laptop text-primary"></i>
+                </div>
+                <h5>Asset Reports</h5>
+                <span class="report-count">4 Reports</span>
+            </div>
+            <ul class="report-sub-list">
+                <li>
+                    <a href="{{ url_for('report_view', report_type='asset', sub_type='it') }}">
+                        <i class="bi bi-laptop text-primary"></i>
+                        IT Asset Report
+                        <i class="bi bi-arrow-right ms-auto text-muted small"></i>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('report_view', report_type='asset', sub_type='infrastructure') }}">
+                        <i class="bi bi-building text-info"></i>
+                        Infrastructure Report
+                        <i class="bi bi-arrow-right ms-auto text-muted small"></i>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('report_view', report_type='asset', sub_type='fixed') }}">
+                        <i class="bi bi-pin-map text-warning"></i>
+                        Fixed Asset Report
+                        <i class="bi bi-arrow-right ms-auto text-muted small"></i>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('report_view', report_type='asset', sub_type='shared') }}">
+                        <i class="bi bi-lightbulb text-secondary"></i>
+                        IP Asset Report
+                        <i class="bi bi-arrow-right ms-auto text-muted small"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Employee Reports -->
+    <div class="col-md-4">
+        <div class="card report-category-card h-100">
+            <div class="report-header" style="background: rgba(5,150,105,0.08);">
+                <div class="report-icon-sm icon-box-success">
+                    <i class="bi bi-people text-success"></i>
+                </div>
+                <h5>Employee Reports</h5>
+                <span class="report-count">1 Report</span>
+            </div>
+            <ul class="report-sub-list">
+                <li>
+                    <a href="{{ url_for('report_view', report_type='employee', sub_type='all') }}">
+                        <i class="bi bi-person-check text-success"></i>
+                        Employee Assignment Report
+                        <i class="bi bi-arrow-right ms-auto text-muted small"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+<!-- Ticket Reports -->
+<div class="col-md-4">
+    <div class="card report-category-card h-100">
+        <div class="report-header" style="background: rgba(181,32,37,0.08);">
+            <div class="report-icon-sm icon-box-primary">
+                <i class="bi bi-ticket-detailed text-primary"></i>
+            </div>
+            <h5>Ticket Reports</h5>
+            <span class="report-count">4 Reports</span>
+        </div>
+        <ul class="report-sub-list">
+            <li>
+                <a href="{{ url_for('report_view', report_type='ticket', sub_type='all') }}">
+                    <i class="bi bi-ticket text-primary"></i>
+                    Ticket Report
+                    <i class="bi bi-arrow-right ms-auto text-muted small"></i>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('report_view', report_type='ticket', sub_type='employee') }}">
+                    <i class="bi bi-person-check text-success"></i>
+                    Employee Ticket Report
+                    <i class="bi bi-arrow-right ms-auto text-muted small"></i>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('report_view', report_type='ticket', sub_type='asset') }}">
+                    <i class="bi bi-laptop text-info"></i>
+                    Asset Ticket Report
+                    <i class="bi bi-arrow-right ms-auto text-muted small"></i>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('report_view', report_type='ticket', sub_type='monthly') }}">
+                    <i class="bi bi-calendar3 text-warning"></i>
+                    Monthly Ticket Report
+                    <i class="bi bi-arrow-right ms-auto text-muted small"></i>
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+    <!-- Vendor Reports -->
+    <div class="col-md-4">
+        <div class="card report-category-card h-100">
+            <div class="report-header" style="background: rgba(107,114,128,0.08);">
+                <div class="report-icon-sm" style="background: rgba(107,114,128,0.1); color: #6b7280;">
+                    <i class="bi bi-shop text-secondary"></i>
+                </div>
+                <h5>Vendor Reports</h5>
+                <span class="report-count">1 Report</span>
+            </div>
+            <ul class="report-sub-list">
+                <li>
+                    <a href="{{ url_for('report_view', report_type='vendor', sub_type='all') }}">
+                        <i class="bi bi-shop text-secondary"></i>
+                        Vendor Purchase Report
+                        <i class="bi bi-arrow-right ms-auto text-muted small"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Warranty Reports -->
+    <div class="col-md-4">
+        <div class="card report-category-card h-100">
+            <div class="report-header" style="background: rgba(217,119,6,0.08);">
+                <div class="report-icon-sm icon-box-warning">
+                    <i class="bi bi-shield-check text-warning"></i>
+                </div>
+                <h5>Warranty Reports</h5>
+                <span class="report-count">1 Report</span>
+            </div>
+            <ul class="report-sub-list">
+                <li>
+                    <a href="{{ url_for('report_view', report_type='warranty', sub_type='all') }}">
+                        <i class="bi bi-calendar-check text-warning"></i>
+                        Warranty Expiry Report
+                        <i class="bi bi-arrow-right ms-auto text-muted small"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Service & Scrap Reports -->
+    <div class="col-md-4">
+        <div class="card report-category-card h-100">
+            <div class="report-header" style="background: rgba(220,38,38,0.08);">
+                <div class="report-icon-sm icon-box-danger">
+                    <i class="bi bi-tools text-danger"></i>
+                </div>
+                <h5>Service & Scrap Reports</h5>
+                <span class="report-count">2 Reports</span>
+            </div>
+            <ul class="report-sub-list">
+                <li>
+                    <a href="{{ url_for('report_view', report_type='service', sub_type='all') }}">
+                        <i class="bi bi-wrench text-danger"></i>
+                        Service History Report
+                        <i class="bi bi-arrow-right ms-auto text-muted small"></i>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('report_view', report_type='scrap', sub_type='all') }}">
+                        <i class="bi bi-archive text-muted"></i>
+                        Scrapped Assets Report
+                        <i class="bi bi-arrow-right ms-auto text-muted small"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

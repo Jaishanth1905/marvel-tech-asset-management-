@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MarvelTech Asset - {{ asset.asset_id }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --secondary: #a78bfa;
+            --accent: #f472b6;
+            --success: #34d399;
+            --warning: #fbbf24;
+            --danger: #f87171;
+            --info: #22d3ee;
+            --dark-bg: #0f0f23;
+            --card-bg: rgba(30, 30, 60, 0.8);
+            --surface: rgba(255, 255, 255, 0.05);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
+        * { 
+            font-family: 'Inter', sans-serif; 
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(244, 114, 182, 0.1) 0%, transparent 50%);
+            z-index: -1;
+            animation: meshMove 20s ease-in-out infinite;
+        }
+
+        @keyframes meshMove {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.95); }
+        }
+
+        /* Header */
+        .portal-header {
+            background: rgba(20, 20, 50, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .portal-brand {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary-light);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .portal-brand i {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 1.6rem;
+        }
+
+        /* Hero Card */
+        .hero-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 2rem;
+            margin: 2rem 0;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--accent), var(--secondary));
+        }
+
+        .asset-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .asset-badge.status-Assigned {
+            background: rgba(52, 211, 153, 0.15);
+            color: var(--success);
+            border: 1px solid rgba(52, 211, 153, 0.3);
+        }
+
+        .asset-badge.status-Available {
+            background: rgba(251, 191, 36, 0.15);
+            color: var(--warning);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        .asset-badge.status-Service {
+            background: rgba(248, 113, 113, 0.15);
+            color: var(--danger);
+            border: 1px solid rgba(248, 113, 113, 0.3);
+        }
+
+        .asset-badge.status-Scrapped {
+            background: rgba(148, 163, 184, 0.15);
+            color: var(--text-secondary);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+        }
+
+        .asset-id-display {
+            font-family: 'Space Grotesk', monospace;
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-light), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+        }
+
+        .asset-name-display {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .info-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.25rem;
+            transition: all 0.3s;
+        }
+
+        .info-item:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.1);
+        }
+
+        .info-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .info-value.highlight {
+            font-size: 1.3rem;
+            background: linear-gradient(135deg, var(--primary-light), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Image Section */
+        .image-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            overflow: hidden;
+            margin-top: 2rem;
+        }
+
+        .image-section img {
+            width: 100%;
+            height: auto;
+            max-height: 400px;
+            object-fit: contain;
+            background: linear-gradient(135deg, var(--surface), var(--card-bg));
+            padding: 2rem;
+        }
+
+        .image-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .image-placeholder i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
+        /* Footer */
+        .portal-footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border);
+            margin-top: 3rem;
+        }
+
+        .scan-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 50px;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            box-shadow: 0 8px 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .scan-badge i {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .asset-id-display {
+                font-size: 1.8rem;
+            }
+            .hero-card {
+                padding: 1.5rem;
+                margin: 1rem;
+            }
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="portal-header">
+        <div class="container">
+            <a href="#" class="portal-brand">
+                <i class="bi bi-shield-fill-check"></i>
+                MarvelTech
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Scan Badge -->
+        <div class="text-center mt-4">
+            <div class="scan-badge">
+                <i class="bi bi-qr-code-scan"></i>
+                Scanned Asset
+            </div>
+        </div>
+
+        <!-- Hero Card -->
+        <div class="hero-card">
+            <div class="asset-badge status-{{ asset.current_status }}">
+                <i class="bi bi-circle-fill" style="font-size: 0.5rem;"></i>
+                {{ asset.current_status }}
+            </div>
+            
+            <div class="asset-id-display">{{ asset.asset_id }}</div>
+            <div class="asset-name-display">{{ asset.asset_name }}</div>
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label"><i class="bi bi-layers me-1"></i>Category</div>
+                    <div class="info-value">{{ asset.category.name if asset.category else '-' }}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label"><i class="bi bi-tag me-1"></i>Type</div>
+                    <div class="info-value">{{ asset.asset_type }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label"><i class="bi bi-building me-1"></i>Business Unit</div>
+                    <div class="info-value">{{ asset.business_unit.name if asset.business_unit else '-' }}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label"><i class="bi bi-building me-1"></i>Manufacturer</div>
+                    <div class="info-value">{{ asset.manufacturer or '-' }}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label"><i class="bi bi-upc-scan me-1"></i>Model</div>
+                    <div class="info-value">{{ asset.model_name or '-' }} {{ asset.model_number or '' }}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label"><i class="bi bi-upc me-1"></i>Serial Number</div>
+                    <div class="info-value" style="font-family: monospace;">{{ asset.serial_number or '-' }}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label"><i class="bi bi-shop me-1"></i>Vendor</div>
+                    <div class="info-value">{{ asset.vendor.name if asset.vendor else '-' }}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label"><i class="bi bi-calendar me-1"></i>Purchase Date</div>
+                    <div class="info-value">{{ asset.purchase_date.strftime('%d-%b-%Y') if asset.purchase_date else '-' }}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label"><i class="bi bi-shield-check me-1"></i>Warranty Until</div>
+                    <div class="info-value {% if asset.warranty_expiry and asset.warranty_expiry > date.today() %}text-success{% else %}text-danger{% endif %}">
+                        {{ asset.warranty_expiry.strftime('%d-%b-%Y') if asset.warranty_expiry else '-' }}
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label"><i class="bi bi-cash-stack me-1"></i>Cost Per Item</div>
+                    <div class="info-value highlight">₹{{ "{:,.2f}".format(asset.cost|float) if asset.cost else '-' }}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label"><i class="bi bi-calculator me-1"></i>Total Cost</div>
+                    <div class="info-value highlight">₹{{ "{:,.2f}".format(asset.total_cost|float) if asset.total_cost else '-' }}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label"><i class="bi bi-boxes me-1"></i>Quantity</div>
+                    <div class="info-value">{{ asset.quantity }}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label"><i class="bi bi-receipt me-1"></i>Invoice</div>
+                    <div class="info-value">{{ asset.invoice_number or '-' }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Asset Image -->
+        <div class="image-section">
+            {% if asset.image_path and asset.image_path != 'None' and asset.image_path != '' %}
+                {% set image_filename = asset.image_path.replace('\\', '/').split('/')[-1] %}
+                <img src="{{ server_url }}/uploads/images/{{ image_filename }}" 
+                     alt="{{ asset.asset_name }}"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="image-placeholder" style="display: none;">
+                    <i class="bi bi-image-alt"></i>
+                    <h5>Image not available</h5>
+                </div>
+            {% else %}
+                <div class="image-placeholder">
+                    <i class="bi bi-image"></i>
+                    <h5>No image uploaded</h5>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Assignment Info -->
+        {% if current_assignment %}
+        <div class="hero-card" style="margin-top: 2rem;">
+            <h5 class="fw-bold mb-3"><i class="bi bi-person-check me-2 text-success"></i>Current Assignment</h5>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Assigned To</div>
+                    <div class="info-value">{{ current_assignment.employee.name }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Employee Code</div>
+                    <div class="info-value">{{ current_assignment.employee.employee_code }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Department</div>
+                    <div class="info-value">{{ current_assignment.employee.department or '-' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Assigned Date</div>
+                    <div class="info-value">{{ current_assignment.assigned_date.strftime('%d-%b-%Y') }}</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+
+        <!-- Asset History -->
+        <div class="hero-card" style="margin-top: 2rem;">
+            <h5 class="fw-bold mb-3"><i class="bi bi-clock-history me-2 text-info"></i>Asset History</h5>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Created At</div>
+                    <div class="info-value">{{ asset.created_at.strftime('%d-%b-%Y %H:%M') if asset.created_at else '-' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Last Updated</div>
+                    <div class="info-value">{{ asset.updated_at.strftime('%d-%b-%Y %H:%M') if asset.updated_at else '-' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Current Status</div>
+                    <div class="info-value" style="color: {% if asset.current_status == 'Assigned' %}var(--success){% elif asset.current_status == 'Available' %}var(--warning){% elif asset.current_status == 'Service' %}var(--danger){% else %}var(--text-secondary){% endif %}">{{ asset.current_status }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Warranty Status</div>
+                    <div class="info-value" style="color: {% if asset.warranty_expiry and asset.warranty_expiry > date.today() %}var(--success){% else %}var(--danger){% endif %}">
+                        {% if asset.warranty_expiry and asset.warranty_expiry > date.today() %}Active{% else %}Expired{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    <!-- Footer -->
+    <footer class="portal-footer">
+        <p><i class="bi bi-shield-check me-1"></i> MarvelTech Asset Management System</p>
+        <p class="small">This is a read-only public view. For full access, please login to the system.</p>
+    </footer>
+</body>
+</html>

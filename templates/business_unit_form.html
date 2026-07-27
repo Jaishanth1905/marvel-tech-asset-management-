@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('business_units_list') }}">Business Units</a></li>
+                <li class="breadcrumb-item active">{{ 'Edit' if unit else 'Add' }} Business Unit</li>
+            </ol>
+        </nav>
+        <h2 class="fw-bold">
+            <i class="bi bi-{{ 'pencil' if unit else 'plus-circle' }} me-2 text-primary"></i>
+            {{ 'Edit' if unit else 'Add New' }} Business Unit
+        </h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-building me-2"></i>Business Unit Details
+            </div>
+            <div class="card-body">
+                <form method="POST" 
+                      action="{{ url_for('edit_business_unit', unit_id=unit.id) if unit else url_for('add_business_unit') }}"
+                      enctype="multipart/form-data">
+                    
+                    <div class="row g-3">
+                        <!-- Basic Info -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Business Unit Name <span class="text-danger">*</span></label>
+                            <input type="text" name="name" class="form-control" required
+                                   value="{{ unit.name if unit else '' }}" placeholder="e.g. India Operations">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Company Name</label>
+                             <input
+                              type="text"
+                                name="company_name"
+                                  class="form-control"
+                                    value="{{ unit.company_name if unit else 'MarvelTech' }}"
+                                      placeholder="e.g. Marvel Tech Inc">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Business Unit Code</label>
+                            <input type="text" name="code" class="form-control"
+                                   value="{{ unit.code if unit else '' }}" placeholder="Auto-generated if empty">
+                        </div>
+                        
+                        <!-- Location -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Country</label>
+                            <input type="text" name="country" class="form-control"
+                                   value="{{ unit.country if unit else '' }}" placeholder="e.g. India">
+                        </div>
+                        <div class="col-md-6">
+    <label class="form-label fw-bold">Country Flag</label>
+    {% if unit and unit.country_flag %}
+        <div class="mb-2 d-flex align-items-center gap-2">
+            {% if is_uploaded_image(unit.country_flag) %}
+                <img src="{{ get_uploaded_image_url(unit.country_flag) }}"
+                     alt="Current Country Flag"
+                     style="height: 32px; width: 44px; object-fit: cover; border-radius: 6px;">
+            {% else %}
+                <span style="font-size: 1.8rem;">{{ unit.country_flag }}</span>
+            {% endif %}
+            <small class="text-muted">Current flag</small>
+        </div>
+    {% endif %}
+    <input type="file" name="country_flag_file" class="form-control" accept=".jpg,.jpeg,.png">
+    <small class="text-muted d-block">Browse local device. Max 100 KB, JPG/PNG only.</small>
+    <input type="text" name="country_flag" class="form-control mt-2"
+           value="{{ unit.country_flag if unit and not is_uploaded_image(unit.country_flag) else '' }}"
+           placeholder="Optional emoji fallback, e.g. 🇮🇳">
+</div>
+                        
+                        <!-- Currency -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Currency</label>
+                            <input type="text" name="currency" class="form-control"
+                                   value="{{ unit.currency if unit else '' }}" placeholder="e.g. INR">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Currency Symbol</label>
+                            <input type="text" name="currency_symbol" class="form-control"
+                                   value="{{ unit.currency_symbol if unit else '₹' }}" placeholder="e.g. ₹">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Capital Budget</label>
+                            <input type="number" name="capital_budget" class="form-control" step="0.01" min="0"
+                                   value="{{ unit.capital_budget if unit else '' }}" placeholder="e.g. 1000000">
+                        </div>
+                        
+                        <!-- Status -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Status</label>
+                            <select name="status" class="form-select">
+                                <option value="Active" {{ 'selected' if unit and unit.status == 'Active' else '' }}>Active</option>
+                                <option value="Inactive" {{ 'selected' if unit and unit.status == 'Inactive' else '' }}>Inactive</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Logo -->
+                        <div class="col-md-6">
+    <label class="form-label fw-bold">Business Unit Logo</label>
+    {% if unit and unit.logo and uploaded_image_exists(unit.logo) %}
+    <div class="mb-2 d-flex align-items-center gap-2">
+        <img src="{{ get_uploaded_image_url(unit.logo) }}"
+             alt="Current Logo"
+             style="height: 40px; width: 40px; object-fit: contain; border-radius: 8px;">
+        <small class="text-muted">Current logo</small>
+    </div>
+    {% endif %}
+    <input type="file" name="logo" class="form-control" accept=".jpg,.jpeg,.png">
+    <small class="text-muted">Browse local device. Max 100 KB, JPG/PNG only.</small>
+</div>
+                        
+                        <!-- Description -->
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Description</label>
+                            <textarea name="description" class="form-control" rows="3" 
+                                      placeholder="Business unit description...">{{ unit.description if unit else '' }}</textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2 justify-content-end mt-4">
+                        <a href="{{ url_for('business_units_list') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-marvel">
+                            <i class="bi bi-check-lg me-1"></i>{{ 'Update' if unit else 'Create' }} Business Unit
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

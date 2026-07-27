@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('depreciation_dashboard') }}">Depreciation</a></li>
+                <li class="breadcrumb-item active">{{ asset.asset_id }}</li>
+            </ol>
+        </nav>
+        <h2 class="fw-bold"><i class="bi bi-gear me-2 text-primary"></i>Depreciation Settings</h2>
+        <p class="text-muted">{{ asset.asset_name }}</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Current Values -->
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-calculator me-2"></i>Current Status</div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <td class="text-muted">Purchase Value</td>
+                        <td class="fw-bold text-end">{{ dep_info.purchase_value|format_currency }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Years Owned</td>
+                        <td class="fw-bold text-end">{{ dep_info.years_owned }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Method</td>
+                        <td class="fw-bold text-end">{{ dep_info.method }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Rate</td>
+                        <td class="fw-bold text-end">{{ dep_info.depreciation_rate }}%</td>
+                    </tr>
+                    <tr><td colspan="2"><hr></td></tr>
+                    <tr>
+                        <td class="text-muted">Accumulated</td>
+                        <td class="fw-bold text-danger text-end">{{ dep_info.accumulated_depreciation|format_currency }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Current Value</td>
+                        <td class="fw-bold text-success text-end">{{ dep_info.current_value|format_currency }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Remaining</td>
+                        <td class="fw-bold text-primary text-end">{{ dep_info.remaining_value|format_currency }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Form -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-sliders me-2"></i>Depreciation Settings</div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Purchase Value</label>
+                            <input type="number" name="purchase_value" class="form-control" step="0.01"
+                                   value="{{ dep.purchase_value if dep else asset.total_cost }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Depreciation Method</label>
+                            <select name="depreciation_method" class="form-select">
+                                <option value="Straight Line" {{ 'selected' if dep and dep.depreciation_method == 'Straight Line' else '' }}>Straight Line</option>
+                                <option value="Reducing Balance" {{ 'selected' if dep and dep.depreciation_method == 'Reducing Balance' else '' }}>Reducing Balance</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Annual Rate (%)</label>
+                            <input type="number" name="depreciation_rate" class="form-control" step="0.01" min="0" max="100"
+                                   value="{{ dep.depreciation_rate if dep else 25 }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Useful Life (Years)</label>
+                            <input type="number" name="useful_life_years" class="form-control" min="1"
+                                   value="{{ dep.useful_life_years if dep else 4 }}">
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 justify-content-end mt-4">
+                        <a href="{{ url_for('depreciation_dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-marvel">
+                            <i class="bi bi-check-lg me-1"></i>Update & Recalculate
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

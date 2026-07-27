@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('business_unit') }}">Business Unit</a></li>
+                <li class="breadcrumb-item active">
+                    {% if asset_type == 'Shared' %}IP Assets{% else %}{{ asset_type }} Assets{% endif %}
+                </li>
+            </ol>
+        </nav>
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold">
+                    {% if asset_type == 'IT' %}
+                        <i class="bi bi-laptop me-2 text-primary"></i>
+                    {% elif asset_type == 'Infrastructure' %}
+                        <i class="bi bi-building me-2 text-info"></i>
+                    {% elif asset_type == 'Fixed' %}
+                        <i class="bi bi-pin-map me-2 text-warning"></i>
+                    {% else %}
+                        <i class="bi bi-lightbulb me-2 text-secondary"></i>
+                    {% endif %}
+                    {% if asset_type == 'Shared' %}IP Assets{% else %}{{ asset_type }} Assets{% endif %}
+                </h2>
+                <p class="text-muted">Select a category to view assets</p>
+            </div>
+            <a href="{{ url_for('add_asset') }}" class="btn btn-marvel">
+                <i class="bi bi-plus-lg me-1"></i>Add Asset
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Category Cards -->
+<div class="row g-4">
+    {% for category in categories %}
+    <div class="col-md-3 col-sm-6">
+        {% if unit %}
+<a href="{{ url_for('business_unit_category_assets', country_code=unit.code, category_id=category.id) }}" class="text-decoration-none">
+{% else %}
+<a href="{{ url_for('category_assets', category_id=category.id) }}" class="text-decoration-none">
+{% endif %}
+            <div class="card asset-card h-100">
+                <div class="card-body text-center p-4">
+                    {% if category.name == 'Laptops' %}
+                        <i class="bi bi-laptop display-4 text-primary"></i>
+                    {% elif category.name == 'Desktops' %}
+                        <i class="bi bi-pc-display display-4 text-primary"></i>
+                    {% elif category.name == 'Servers' %}
+                        <i class="bi bi-hdd-rack display-4 text-primary"></i>
+                    {% elif category.name == 'Printers' %}
+                        <i class="bi bi-printer display-4 text-primary"></i>
+                    {% elif category.name == 'Monitors' %}
+                        <i class="bi bi-display display-4 text-primary"></i>
+                    {% elif category.name == 'Network Devices' %}
+                        <i class="bi bi-router display-4 text-primary"></i>
+                    {% elif category.name == 'Software Licenses' %}
+                        <i class="bi bi-key display-4 text-primary"></i>
+                    {% elif category.name == 'Accessories' %}
+                        <i class="bi bi-keyboard display-4 text-primary"></i>
+                    {% elif category.name == 'Chairs' or category.name == 'Office Chairs' %}
+                        <i class="bi bi-chair display-4 text-info"></i>
+                    {% elif category.name == 'Desks' or category.name == 'Office Tables' %}
+                        <i class="bi bi-table display-4 text-info"></i>
+                    {% elif category.name == 'Lights' %}
+                        <i class="bi bi-lightbulb display-4 text-info"></i>
+                    {% elif category.name == 'CCTV Cameras' %}
+                        <i class="bi bi-camera-video display-4 text-info"></i>
+                    {% elif category.name == 'Pot Plants' %}
+                        <i class="bi bi-tree display-4 text-info"></i>
+                    {% elif category.name == 'Air Conditioners' %}
+                        <i class="bi bi-fan display-4 text-info"></i>
+                    {% elif category.name == 'Wall Clocks' %}
+                        <i class="bi bi-clock display-4 text-info"></i>
+                    {% elif category.name == 'Switch Boxes' %}
+                        <i class="bi bi-toggle-on display-4 text-info"></i>
+                    {% elif category.name == 'Furniture' %}
+                        <i class="bi bi-box-seam display-4 text-warning"></i>
+                    {% elif category.name == 'Projectors' %}
+                        <i class="bi bi-projector display-4 text-warning"></i>
+                    {% elif category.name == 'TV' or category.name == 'Meeting Room TV' %}
+                        <i class="bi bi-tv display-4 text-warning"></i>
+                    {% elif category.name == 'Electrical Equipment' %}
+                        <i class="bi bi-lightning display-4 text-warning"></i>
+                    {% elif category.name == 'Shared Printers' %}
+                        <i class="bi bi-printer display-4 text-secondary"></i>
+                    {% elif category.name == 'Internet' %}
+                        <i class="bi bi-wifi display-4 text-secondary"></i>
+                    {% elif category.name == 'Network Switches' %}
+                        <i class="bi bi-hdd-network display-4 text-secondary"></i>
+                    {% elif category.name == 'Conference Room' %}
+                        <i class="bi bi-door-open display-4 text-secondary"></i>
+                    {% elif category.name == 'Shared Furniture' %}
+                        <i class="bi bi-sofa display-4 text-secondary"></i>
+                    {% else %}
+                        <i class="bi bi-box display-4 text-primary"></i>
+                    {% endif %}
+                    <h5 class="card-title mt-3 fw-bold text-dark">{{ category.name }}</h5>
+                    <p class="card-text text-muted small">{{ category.description }}</p>
+                    <span class="badge bg-primary">{{ category_stats[category.id].count }} Assets</span>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Category Table -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-info-circle me-2"></i>
+                {% if asset_type == 'Shared' %}IP Assets{% else %}{{ asset_type }} Assets{% endif %}
+                 Categories Overview
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Description</th>
+                                <th>Total Assets</th>
+                                <th>Total Value</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category in categories %}
+                            <tr>
+                                <td class="fw-bold">{{ category.name }}</td>
+                                <td>{{ category.description }}</td>
+                                <td><span class="badge bg-primary">{{ category_stats[category.id].count }}</span></td>
+<td>
+                                     {{ category_stats[category.id].total_value|format_currency }}
+                                 </td>
+                                <td>
+                                    {% if unit %}
+                                    <a href="{{ url_for('business_unit_category_assets', country_code=unit.code, category_id=category.id) }}" class="btn btn-sm btn-marvel">
+                                        {% else %}
+                                        <a href="{{ url_for('category_assets', category_id=category.id) }}" class="btn btn-sm btn-marvel">
+                                            {% endif %}
+                                        <i class="bi bi-eye me-1"></i>View Assets
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

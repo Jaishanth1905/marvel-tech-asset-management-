@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+{% block extra_css %}
+<style>
+    .business-units-grid {
+        align-items: stretch;
+    }
+    .business-unit-card {
+        height: 100%;
+        min-height: 360px;
+        border-radius: 16px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    .business-unit-card .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1rem;
+        min-height: 84px;
+    }
+    .business-unit-title-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        min-width: 0;
+        flex: 1;
+    }
+    .business-unit-logo {
+        width: 46px;
+        height: 46px;
+        object-fit: contain;
+        border-radius: 10px;
+        flex-shrink: 0;
+        background: #ffffff;
+        border: 1px solid var(--border);
+        padding: 4px;
+    }
+    .business-unit-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 10px;
+        flex-shrink: 0;
+    }
+    .business-unit-name {
+        font-size: 1rem;
+        font-weight: 800;
+        margin: 0;
+        line-height: 1.2;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .business-unit-code {
+        display: block;
+        margin-top: 0.2rem;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--text-secondary);
+    }
+    .business-unit-status {
+        width: auto !important;
+        min-width: 72px;
+        flex-shrink: 0;
+        border-radius: 999px;
+        padding: 0.35rem 0.75rem;
+        text-align: center;
+    }
+    .business-unit-card .card-body {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        padding: 1rem;
+    }
+    .business-unit-money-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    .business-unit-money-card {
+        min-height: 78px;
+        border-radius: 14px;
+        padding: 0.85rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
+    }
+    .business-unit-money-card small {
+        display: block;
+        margin-bottom: 0.25rem;
+        color: var(--text-secondary);
+        font-weight: 700;
+    }
+    .business-unit-money-card strong {
+        display: block;
+        font-size: 0.95rem;
+        line-height: 1.25;
+        word-break: break-word;
+    }
+    .business-unit-money-card.budget {
+        background: rgba(181,32,37,0.05);
+        color: var(--primary);
+    }
+    .business-unit-money-card.spent {
+        background: rgba(5,150,105,0.05);
+        color: #059669;
+    }
+    .business-unit-money-card.remaining {
+        grid-column: 1 / -1;
+        background: rgba(217,119,6,0.05);
+        color: #d97706;
+    }
+    .business-unit-meta {
+        display: grid;
+        gap: 0.45rem;
+        margin-bottom: 0.75rem;
+        color: var(--text-secondary);
+        font-size: 0.86rem;
+    }
+    .business-unit-description {
+        margin-bottom: 0;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .business-unit-actions {
+        margin-top: auto;
+        padding-top: 1rem;
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    .business-unit-actions > a,
+    .business-unit-actions > form {
+        flex: 1 1 120px;
+    }
+    .business-unit-actions button,
+    .business-unit-actions a {
+        width: 100%;
+    }
+    @media (max-width: 576px) {
+        .business-unit-card .card-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .business-unit-status {
+            width: 100% !important;
+        }
+        .business-unit-money-grid {
+            grid-template-columns: 1fr;
+        }
+        .business-unit-money-card.remaining {
+            grid-column: auto;
+        }
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Business Units</li>
+            </ol>
+        </nav>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h2 class="fw-bold">
+                    <i class="bi bi-building me-2 text-primary"></i>Business Units
+                </h2>
+                <p class="text-muted mb-0">Manage all business units and their capital budgets</p>
+            </div>
+            <a href="{{ url_for('add_business_unit') }}" class="btn btn-marvel">
+                <i class="bi bi-plus-lg me-1"></i>Add Business Unit
+            </a>
+        </div>
+    </div>
+</div>
+<!-- Business Units Grid -->
+<div class="row g-4 business-units-grid">
+    {% for stat in unit_stats %}
+    <div class="col-xl-4 col-lg-6 col-md-6">
+        <div class="card business-unit-card">
+            <div class="card-header">
+                <div class="business-unit-title-wrap">
+                    {% if stat.unit.logo and uploaded_image_exists(stat.unit.logo) %}
+                    <img
+                        src="{{ get_uploaded_image_url(stat.unit.logo) }}"
+                        alt="{{ stat.unit.name }} Logo"
+                        class="business-unit-logo">
+                    {% else %}
+                    <div class="icon-box icon-box-primary business-unit-icon">
+                        <i class="bi bi-building"></i>
+                    </div>
+                    {% endif %}
+                    <div style="min-width: 0;">
+                        <h6 class="business-unit-name">
+                            {{ stat.unit.name }}
+                        </h6>
+                        <small class="business-unit-code">
+                            {{ stat.unit.code }}
+                            {% if stat.unit.country %}
+                                · {{ stat.unit.country }}
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+                <span class="badge business-unit-status bg-{{ 'success' if stat.unit.status == 'Active' else 'secondary' }}">
+                    {{ stat.unit.status }}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="business-unit-money-grid">
+                    <div class="business-unit-money-card budget">
+                        <small>Budget</small>
+                        <strong>
+                            {{ stat.unit.currency_symbol or '₹' }}{{ "{:,.2f}".format(stat.unit.capital_budget|float) }}
+                        </strong>
+                    </div>
+                    <div class="business-unit-money-card spent">
+                        <small>Spent</small>
+                        <strong>
+                            {{ stat.unit.currency_symbol or '₹' }}{{ "{:,.2f}".format(stat.total_spent|float) }}
+                        </strong>
+                    </div>
+                    <div class="business-unit-money-card remaining">
+                        <small>Remaining</small>
+                        <strong>
+                            {{ stat.unit.currency_symbol or '₹' }}{{ "{:,.2f}".format(stat.remaining|float) }}
+                        </strong>
+                    </div>
+                </div>
+                <div class="business-unit-meta">
+                    <div>
+                        <i class="bi bi-geo-alt me-1"></i>
+                        {{ stat.unit.country or '-' }}
+                    </div>
+                    <div>
+                        <i class="bi bi-currency-exchange me-1"></i>
+                        {{ stat.unit.currency or '-' }}
+                    </div>
+                </div>
+                {% if stat.unit.description %}
+                <p class="small text-muted business-unit-description">
+                    {{ stat.unit.description }}
+                </p>
+                {% endif %}
+                <div class="business-unit-actions">
+                    <a href="{{ url_for('edit_business_unit', unit_id=stat.unit.id) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+                    <form
+                        method="POST"
+                        action="{{ url_for('delete_business_unit', unit_id=stat.unit.id) }}"
+                        onsubmit="return confirm('Delete this business unit?');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-trash"></i> Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center py-5">
+        <i class="bi bi-building display-4 text-muted mb-3"></i>
+        <h5 class="text-muted">No business units found</h5>
+        <a href="{{ url_for('add_business_unit') }}" class="btn btn-marvel mt-3">
+            <i class="bi bi-plus-lg me-1"></i>Add Business Unit
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

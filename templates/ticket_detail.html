@@ -1,0 +1,349 @@
+Create this new file:
+
+templates/ticket_detail.html
+Paste this complete code:
+
+{% extends "base.html" %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="{{ url_for('index') }}">Dashboard</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{{ url_for('tickets_dashboard') }}">Tickets</a>
+                </li>
+                <li class="breadcrumb-item active">
+                    {{ ticket.ticket_id }}
+                </li>
+            </ol>
+        </nav>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <div class="text-uppercase text-muted small fw-bold mb-1">
+                    Ticket Details
+                </div>
+                <h2 class="fw-bold mb-1">
+                    <i class="bi bi-ticket-detailed me-2 text-primary"></i>
+                    {{ ticket.ticket_id }}
+                </h2>
+                <p class="text-muted mb-0">
+                    {% if selected_unit %}
+                        {{ selected_unit.country_flag or '' }}
+                        {{ selected_unit.name }} Business Unit ·
+                    {% endif %}
+                    Created {{ ticket.created_at.strftime('%d %B %Y, %I:%M %p') }}
+                </p>
+            </div>
+            <a href="{{ url_for('tickets_dashboard') }}"
+               class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Back to Tickets
+            </a>
+        </div>
+    </div>
+</div>
+<div class="row g-3 mb-4">
+    <div class="col-md-4 col-lg-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="small text-muted">Approval Status</div>
+                {% if ticket.approval_status == 'Pending Review' %}
+                    <div class="fw-bold text-warning">Pending Review</div>
+                {% elif ticket.approval_status == 'Under Review' %}
+                    <div class="fw-bold text-info">Under Review</div>
+                {% elif ticket.approval_status == 'Approved' %}
+                    <div class="fw-bold text-success">Approved</div>
+                {% elif ticket.approval_status == 'Rejected' %}
+                    <div class="fw-bold text-danger">Rejected</div>
+                {% else %}
+                    <div class="fw-bold">{{ ticket.approval_status }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="small text-muted">Work Status</div>
+                <div class="fw-bold">{{ ticket.status }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="small text-muted">Priority</div>
+                <div class="fw-bold">{{ ticket.priority }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="small text-muted">Assigned Engineer</div>
+                <div class="fw-bold">
+                    {{ ticket.assigned_engineer or 'Not assigned' }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-clipboard2-check me-2"></i>
+                Request Details
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="small text-muted">Employee</div>
+                        <div class="fw-bold">{{ ticket.employee.name }}</div>
+                        <small class="text-muted">
+                            {{ ticket.employee.employee_code }}
+                        </small>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="small text-muted">Department</div>
+                        <div class="fw-bold">
+                            {{ ticket.employee.department or '—' }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="small text-muted">Category</div>
+                        <div class="fw-bold">{{ ticket.category }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="small text-muted">Business Unit</div>
+                        <div class="fw-bold">
+                            {{ ticket.business_unit or selected_unit.name }}
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="small text-muted">Related Asset</div>
+                        {% if ticket.asset %}
+                            <div class="fw-bold">
+                                {{ ticket.asset.asset_id }} —
+                                {{ ticket.asset.asset_name }}
+                            </div>
+                        {% else %}
+                            <div class="text-muted">
+                                No asset selected for this request.
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-12">
+                        <div class="small text-muted mb-1">Employee Description</div>
+                        <div class="p-3 rounded"
+                             style="background: rgba(181, 32, 37, 0.05);">
+                            {{ ticket.description }}
+                        </div>
+                    </div>
+                    {% if ticket.attachment_path %}
+                    <div class="col-12">
+                        <div class="small text-muted mb-2">Attachment</div>
+                        <a href="{{ url_for('admin_ticket_attachment', filename=ticket.attachment_path) }}"
+                           class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-paperclip me-1"></i>
+                            Download Attachment
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-clock-history me-2"></i>
+                Ticket Timeline
+            </div>
+            <div class="card-body">
+                {% for activity in ticket.activities %}
+                <div class="border-start border-2 border-primary ps-3 pb-4 position-relative">
+                    <span class="position-absolute bg-primary rounded-circle"
+                          style="width: 12px; height: 12px; left: -7px; top: 4px;"></span>
+                    <div class="fw-bold">{{ activity.action }}</div>
+                    <div class="small text-muted">
+                        {{ activity.created_at.strftime('%d %b %Y, %I:%M %p') }}
+                        · {{ activity.performed_by }}
+                    </div>
+                    {% if activity.remarks %}
+                    <div class="mt-1">
+                        {{ activity.remarks }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    No activity has been recorded yet.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-shield-check me-2"></i>
+                Admin Review
+            </div>
+            <div class="card-body">
+                {% if ticket.approval_status == 'Pending Review' %}
+                <p class="text-muted">
+                    This ticket is waiting for an Admin review.
+                </p>
+                <form method="POST"
+                      action="{{ url_for('review_ticket', ticket_id=ticket.id) }}">
+                    <button type="submit" class="btn btn-info w-100">
+                        <i class="bi bi-search me-1"></i>
+                        Start Review
+                    </button>
+                </form>
+                {% elif ticket.approval_status == 'Under Review' %}
+                <p class="text-muted">
+                    Review the request, then approve or reject it.
+                </p>
+                <form method="POST"
+                      action="{{ url_for('approve_ticket', ticket_id=ticket.id) }}"
+                      class="mb-2">
+                    <button type="submit"
+                            class="btn btn-success w-100"
+                            onclick="return confirm('Approve this ticket?');">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Approve Ticket
+                    </button>
+                </form>
+                <button type="button"
+                        class="btn btn-outline-danger w-100"
+                        data-bs-toggle="modal"
+                        data-bs-target="#rejectTicketModal">
+                    <i class="bi bi-x-circle me-1"></i>
+                    Reject Ticket
+                </button>
+                {% elif ticket.approval_status == 'Approved' %}
+                <div class="alert alert-success mb-0">
+                    <i class="bi bi-check-circle me-1"></i>
+                    Approved by {{ ticket.reviewed_by or 'Admin' }}.
+                </div>
+                {% elif ticket.approval_status == 'Rejected' %}
+                <div class="alert alert-danger mb-0">
+                    <i class="bi bi-x-circle me-1"></i>
+                    Rejected by {{ ticket.reviewed_by or 'Admin' }}.
+                </div>
+                {% if ticket.rejection_reason %}
+                <hr>
+                <div class="small text-muted mb-1">Rejection Reason</div>
+                <div>{{ ticket.rejection_reason }}</div>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        {% if ticket.approval_status == 'Approved' %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <i class="bi bi-truck me-2"></i>
+                Fulfillment Workflow
+            </div>
+            <div class="card-body">
+                <div class="small text-muted mb-3">
+                    Current stage: <strong>{{ ticket.status }}</strong>
+                </div>
+                {% if ticket.status in ['Open', 'Assigned', 'Waiting for User'] %}
+                <form method="POST" action="{{ url_for('ticket_start_service', ticket_id=ticket.id) }}">
+                    <input type="text" name="assigned_engineer" class="form-control form-control-sm mb-2" placeholder="Assign engineer (optional)">
+                    <button type="submit" class="btn btn-primary w-100 btn-sm">
+                        <i class="bi bi-tools me-1"></i>Move to In Service
+                    </button>
+                </form>
+                {% elif ticket.status == 'In Service' %}
+                <form method="POST" action="{{ url_for('ticket_complete_service', ticket_id=ticket.id) }}">
+                    <button type="submit" class="btn btn-info w-100 btn-sm">
+                        <i class="bi bi-check2-square me-1"></i>Mark Service Completed
+                    </button>
+                </form>
+                {% elif ticket.status == 'Service Completed' %}
+                <form method="POST" action="{{ url_for('ticket_receive', ticket_id=ticket.id) }}">
+                    <button type="submit" class="btn btn-success w-100 btn-sm">
+                        <i class="bi bi-box-seam me-1"></i>Received by Admin (Notify Employee)
+                    </button>
+                </form>
+                {% elif ticket.status == 'Received by Admin' %}
+                <form method="POST" action="{{ url_for('ticket_mark_collected', ticket_id=ticket.id) }}">
+                    <button type="submit" class="btn btn-dark w-100 btn-sm">
+                        <i class="bi bi-check-circle me-1"></i>Employee Collected — Close Ticket
+                    </button>
+                </form>
+                {% elif ticket.status == 'Closed' %}
+                <div class="alert alert-secondary mb-0 py-2">
+                    <i class="bi bi-check-circle me-1"></i>Ticket closed. Asset collected.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <i class="bi bi-person-check me-2"></i>
+                Review Information
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="small text-muted">Reviewed By</div>
+                    <div class="fw-bold">
+                        {{ ticket.reviewed_by or 'Not reviewed yet' }}
+                    </div>
+                </div>
+                <div>
+                    <div class="small text-muted">Reviewed At</div>
+                    <div class="fw-bold">
+                        {% if ticket.reviewed_at %}
+                            {{ ticket.reviewed_at.strftime('%d %b %Y, %I:%M %p') }}
+                        {% else %}
+                            Not reviewed yet
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="rejectTicketModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form method="POST"
+              action="{{ url_for('reject_ticket', ticket_id=ticket.id) }}"
+              class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reject {{ ticket.ticket_id }}</h5>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <label class="form-label fw-bold">
+                    Reason for rejection
+                </label>
+                <textarea name="rejection_reason"
+                          class="form-control"
+                          rows="4"
+                          required
+                          placeholder="Explain why this request is being rejected"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button"
+                        class="btn btn-outline-secondary"
+                        data-bs-dismiss="modal">
+                    Cancel
+                </button>
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-x-circle me-1"></i>
+                    Reject Ticket
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

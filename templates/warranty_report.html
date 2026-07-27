@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Warranty Report</li>
+            </ol>
+        </nav>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h2 class="fw-bold"><i class="bi bi-shield-check me-2 text-primary"></i>Warranty Report</h2>
+                <p class="text-muted mb-0">{{ selected_unit.name }} · {{ assets|length }} asset{{ 's' if assets|length != 1 else '' }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Pills -->
+<div class="d-flex gap-2 flex-wrap mb-4">
+    <a href="{{ url_for('warranty_report') }}" class="btn btn-sm {{ 'btn-marvel' if not filter_type else 'btn-outline-secondary' }}">
+        All ({{ warranty_data.under_warranty + warranty_data.expiring + warranty_data.expired }})
+    </a>
+    <a href="{{ url_for('warranty_report', filter='under') }}" class="btn btn-sm {{ 'btn-marvel' if filter_type == 'under' else 'btn-outline-success' }}">
+        <i class="bi bi-shield-check me-1"></i>Under Warranty ({{ warranty_data.under_warranty }})
+    </a>
+    <a href="{{ url_for('warranty_report', filter='expiring') }}" class="btn btn-sm {{ 'btn-marvel' if filter_type == 'expiring' else 'btn-outline-warning' }}">
+        <i class="bi bi-hourglass-split me-1"></i>Expiring 30 Days ({{ warranty_data.expiring }})
+    </a>
+    <a href="{{ url_for('warranty_report', filter='expired') }}" class="btn btn-sm {{ 'btn-marvel' if filter_type == 'expired' else 'btn-outline-danger' }}">
+        <i class="bi bi-shield-x me-1"></i>Expired ({{ warranty_data.expired }})
+    </a>
+    <a href="{{ url_for('warranty_report', filter='extended') }}" class="btn btn-sm {{ 'btn-marvel' if filter_type == 'extended' else 'btn-outline-info' }}">
+        <i class="bi bi-shield-plus me-1"></i>Extended Warranty ({{ warranty_data.extended }})
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-table me-2"></i>Asset List</span>
+        <span class="badge bg-primary">{{ assets|length }} Records</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>Asset ID</th>
+                        <th>Asset Name</th>
+                        <th>Category</th>
+                        <th>Purchase Date</th>
+                        <th>Warranty Expiry</th>
+                        <th>Extended Warranty</th>
+                        <th>Warranty Status</th>
+                        <th>Asset Status</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for asset in assets %}
+                    <tr>
+                        <td class="fw-bold text-primary">{{ asset.asset_id }}</td>
+                        <td>{{ asset.asset_name }}</td>
+                        <td>{{ asset.category.name if asset.category else '-' }}</td>
+                        <td>{{ asset.purchase_date|format_date if asset.purchase_date else '-' }}</td>
+                        <td>{{ asset.warranty_expiry|format_date if asset.warranty_expiry else '-' }}</td>
+                        <td>
+                            {% if asset.extended_warranty %}
+                            <span class="badge bg-info"><i class="bi bi-shield-plus me-1"></i>Yes</span>
+                            {% else %}
+                            <span class="text-muted">No</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if asset.warranty_expiry and asset.warranty_expiry < today %}
+                            <span class="badge bg-danger">Expired</span>
+                            {% elif asset.warranty_expiry and asset.warranty_expiry <= thirty_days %}
+                            <span class="badge bg-warning text-dark">Expiring Soon</span>
+                            {% else %}
+                            <span class="badge bg-success">Under Warranty</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="status-badge status-{{ asset.current_status }}">{{ asset.current_status }}</span>
+                        </td>
+                        <td class="text-center">
+                            <a href="{{ url_for('asset_detail', asset_id=asset.id) }}" class="btn btn-sm btn-outline-primary" title="View Details">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center py-5 text-muted">
+                            <i class="bi bi-shield-check display-4 d-block mb-2"></i>
+                            No assets match this warranty filter
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

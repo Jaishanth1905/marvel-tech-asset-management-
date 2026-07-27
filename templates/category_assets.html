@@ -1,0 +1,398 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('business_unit') }}">Business Unit</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('assets_by_type', asset_type=category.asset_type) }}">
+                    {% if category.asset_type == 'Shared' %}IP Assets{% else %}{{ category.asset_type }} Assets{% endif %}
+                </a></li>
+                <li class="breadcrumb-item active">{{ category.name }}</li>
+            </ol>
+        </nav>
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold">
+                    {% if category.asset_type == 'IT' %}
+                        <i class="bi bi-laptop me-2 text-primary"></i>
+                    {% elif category.asset_type == 'Infrastructure' %}
+                        <i class="bi bi-building me-2 text-info"></i>
+                    {% elif category.asset_type == 'Fixed' %}
+                        <i class="bi bi-pin-map me-2 text-warning"></i>
+                    {% else %}
+                        <i class="bi bi-lightbulb me-2 text-secondary"></i>
+                    {% endif %}
+                    {{ category.name }}
+                </h2>
+                <p class="text-muted">{{ category.description }}</p>
+            </div>
+            <a href="{{ url_for('add_asset') }}" class="btn btn-marvel">
+                <i class="bi bi-plus-lg me-1"></i>Add Asset
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Cost Summary Cards — Equal Size -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card h-100 text-center p-3" style="border-left: 3px solid var(--primary);">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Category Total Value</h6>
+                <h4 class="fw-bold text-primary mb-0">
+                    {% set cat_total = assets|map(attribute='total_cost')|sum %}
+                    {{ cat_total|format_currency if cat_total else '₹0.00' }}
+                </h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 text-center p-3" style="border-left: 3px solid #0891b2;">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Total Items</h6>
+                <h4 class="fw-bold text-info mb-0">
+                    {% set total_qty = assets|map(attribute='quantity')|sum %}
+                    {{ total_qty }}
+                </h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 text-center p-3" style="border-left: 3px solid #d97706;">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Asset Count</h6>
+                <h4 class="fw-bold text-warning mb-0">{{ assets|length }}</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Asset List Table with Column Filters ONLY -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span><i class="bi bi-table me-2"></i>Asset List</span>
+    <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-primary">{{ assets|length }} Records</span>
+        <button type="button" class="btn btn-sm btn-marvel" id="compareBtn" disabled onclick="openCompareModal()">
+            <i class="bi bi-bar-chart-steps me-1"></i>Compare (<span id="compareCount">0</span>)
+        </button>
+    </div>
+</div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle" id="assetsTable">
+                <thead>
+                    <tr>
+                        <th>
+                            Asset ID <i class="bi bi-funnel-fill ms-1 text-muted small"></i>
+                            <select class="table-filter" onchange="filterTable(0, this.value)">
+                                <option value="">All</option>
+                                {% for asset in assets %}
+                                <option value="{{ asset.asset_id }}">{{ asset.asset_id }}</option>
+                                {% endfor %}
+                            </select>
+                        </th>
+                        <th>
+                            Asset Name <i class="bi bi-funnel-fill ms-1 text-muted small"></i>
+                            <select class="table-filter" onchange="filterTable(1, this.value)">
+                                <option value="">All</option>
+                                {% for asset in assets %}
+                                <option value="{{ asset.asset_name }}">{{ asset.asset_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </th>
+                        <th>
+                            Manufacturer <i class="bi bi-funnel-fill ms-1 text-muted small"></i>
+                            <select class="table-filter" onchange="filterTable(2, this.value)">
+                                <option value="">All</option>
+                                {% for asset in assets if asset.manufacturer %}
+                                <option value="{{ asset.manufacturer }}">{{ asset.manufacturer }}</option>
+                                {% endfor %}
+                            </select>
+                        </th>
+                        <th>
+                            Model No <i class="bi bi-funnel-fill ms-1 text-muted small"></i>
+                            <select class="table-filter" onchange="filterTable(3, this.value)">
+                                <option value="">All</option>
+                                {% for asset in assets if asset.model_number %}
+                                <option value="{{ asset.model_number }}">{{ asset.model_number }}</option>
+                                {% endfor %}
+                            </select>
+                        </th>
+                        <th>Qty</th>
+                        <th>Cost/Item</th>
+                        <th>Total Cost</th>
+                        <th>
+                            Employee <i class="bi bi-funnel-fill ms-1 text-muted small"></i>
+                            <select class="table-filter" onchange="filterTable(7, this.value)">
+                                <option value="">All</option>
+                                {% for emp in employees %}
+                                <option value="{{ emp.name }}">{{ emp.name }}</option>
+                                {% endfor %}
+                                <option value="-">Unassigned</option>
+                            </select>
+                        </th>
+                        <th>
+                            Status <i class="bi bi-funnel-fill ms-1 text-muted small"></i>
+                            <select class="table-filter" onchange="filterTable(8, this.value)">
+                                <option value="">All</option>
+                                <option value="Available">Available</option>
+                                <option value="Assigned">Assigned</option>
+                                <option value="Service">In Service</option>
+                                <option value="Scrapped">Scrapped</option>
+                            </select>
+                        </th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for asset in assets %}
+                    <tr>
+                        <td>
+                             <input type="checkbox" class="form-check-input compare-checkbox" value="{{ asset.id }}" onchange="updateCompareBar()">
+                        </td>
+                        <td class="fw-bold text-primary">{{ asset.asset_id }}</td>
+                        <td>{{ asset.asset_name }}</td>
+                        <td>{{ asset.manufacturer or '-' }}</td>
+                        <td>{{ asset.model_number or '-' }}</td>
+                        <td>{{ asset.quantity }}</td>
+                        
+                        <td>{{ asset.cost|format_currency }}</td>
+                        <td class="fw-bold">{{ asset.total_cost|format_currency }}</td>
+                        <td>
+                            {% set current = asset.assignments|selectattr('returned_date', 'none')|list %}
+                            {% if current %}
+                                {% for assign in current %}
+                                <span class="text-dark"><i class="bi bi-person me-1"></i>{{ assign.employee.name }}</span>
+                                <small class="text-muted d-block">({{ assign.employee.employee_code }})</small>
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="status-badge status-{{ asset.current_status }}">
+                                {{ asset.current_status }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+    <div class="d-flex gap-1 justify-content-center flex-wrap">
+        <!-- View asset -->
+        <a href="{{ url_for('asset_detail', asset_id=asset.id) }}"
+           class="btn btn-sm btn-outline-primary"
+           title="View Details">
+            <i class="bi bi-eye"></i>
+        </a>
+        <!-- Edit asset -->
+        <a href="{{ url_for('edit_asset', asset_id=asset.id) }}"
+           class="btn btn-sm btn-outline-secondary"
+           title="Edit">
+            <i class="bi bi-pencil"></i>
+        </a>
+        <!-- Scrap selected quantity -->
+        {% if asset.quantity > 0 %}
+        <form method="POST"
+              action="{{ url_for('scrap_asset', asset_id=asset.id) }}"
+              class="d-flex gap-1">
+            <input type="number"
+                   name="scrap_quantity"
+                   min="1"
+                   max="{{ asset.quantity }}"
+                   value="1"
+                   required
+                   class="form-control form-control-sm"
+                   style="width: 58px;"
+                   title="Quantity to scrap">
+            <input type="text"
+                   name="remarks"
+                   class="form-control form-control-sm"
+                   style="width: 100px;"
+                   placeholder="Reason">
+            <button type="submit"
+                    class="btn btn-sm btn-outline-warning"
+                    title="Scrap selected quantity"
+                    onclick="return confirm('Scrap the selected quantity of this asset?');">
+                <i class="bi bi-trash3"></i>
+            </button>
+        </form>
+        {% endif %}
+        <!-- Delete asset record — only shown after available quantity is zero -->
+        {% if asset.quantity == 0 %}
+        <form method="POST"
+              action="{{ url_for('delete_asset', asset_id=asset.id) }}"
+              onsubmit="return confirm('Delete this asset record? This action will archive the record but preserve its history.');">
+            <button type="submit"
+                    class="btn btn-sm btn-outline-danger"
+                    title="Delete asset record">
+                <i class="bi bi-x-circle"></i>
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="10" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                            No assets found in this category
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function updateCompareBar() {
+    const checked = document.querySelectorAll('.compare-checkbox:checked');
+    const btn = document.getElementById('compareBtn');
+    const countEl = document.getElementById('compareCount');
+    countEl.textContent = checked.length;
+    btn.disabled = checked.length < 2 || checked.length > 4;
+    if (checked.length > 4) {
+        checked[checked.length - 1].checked = false;
+        countEl.textContent = 4;
+    }
+}
+
+function openCompareModal() {
+    const ids = Array.from(document.querySelectorAll('.compare-checkbox:checked')).map(cb => cb.value);
+    if (ids.length < 2) return;
+
+    const modalEl = document.getElementById('compareModal');
+    const modal = new bootstrap.Modal(modalEl);
+    document.getElementById('compareLoading').style.display = 'block';
+    document.getElementById('compareTableWrap').style.display = 'none';
+    document.getElementById('compareError').style.display = 'none';
+    modal.show();
+
+    fetch(`/api/assets/compare?ids=${ids.join(',')}`)
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('compareLoading').style.display = 'none';
+            if (data.error) {
+                document.getElementById('compareError').textContent = data.error;
+                document.getElementById('compareError').style.display = 'block';
+                return;
+            }
+            renderCompareTable(data.assets);
+            document.getElementById('compareTableWrap').style.display = 'block';
+        })
+        .catch(() => {
+            document.getElementById('compareLoading').style.display = 'none';
+            document.getElementById('compareError').textContent = 'Could not load comparison. Please try again.';
+            document.getElementById('compareError').style.display = 'block';
+        });
+}
+
+function renderCompareTable(assets) {
+    const head = document.getElementById('compareTableHead');
+    const body = document.getElementById('compareTableBody');
+
+    let headRow = '<tr><th>Property</th>';
+    assets.forEach(a => {
+        headRow += `<th>${a.name}<div class="small text-muted fw-normal">${a.asset_id}</div></th>`;
+    });
+    headRow += '</tr>';
+    head.innerHTML = headRow;
+
+    const rows = [
+        { label: 'Manufacturer', key: 'manufacturer' },
+        { label: 'Model', key: 'model' },
+        { label: 'Processor', key: 'processor' },
+        { label: 'Memory', key: 'memory' },
+        { label: 'Storage', key: 'storage' },
+        { label: 'Warranty', key: 'warranty' },
+        { label: 'Purchase Price', key: 'purchase_price' },
+        { label: 'Current Value', key: 'current_value' }
+    ];
+
+    let bodyHtml = '';
+    rows.forEach(row => {
+        bodyHtml += `<tr><td class="fw-bold">${row.label}</td>`;
+        assets.forEach(a => {
+            bodyHtml += `<td>${a[row.key]}</td>`;
+        });
+        bodyHtml += '</tr>';
+    });
+
+    bodyHtml += '<tr><td class="fw-bold">Health</td>';
+    assets.forEach(a => {
+        bodyHtml += `<td><span class="badge bg-${a.health_color}">${a.health_pct}% ${a.health_label}</span></td>`;
+    });
+    bodyHtml += '</tr>';
+
+    body.innerHTML = bodyHtml;
+}
+// Client-side table filtering for each column
+function filterTable(columnIndex, filterValue) {
+    const table = document.getElementById('assetsTable');
+    const tbody = table.getElementsByTagName('tbody')[0];
+    const rows = tbody.getElementsByTagName('tr');
+    
+    // Get all active filters
+    const filters = [];
+    const selects = table.getElementsByTagName('thead')[0].getElementsByTagName('select');
+    for (let i = 0; i < selects.length; i++) {
+        filters.push(selects[i].value.toLowerCase());
+    }
+    
+    // Column mapping: select index -> cell index
+    const colMap = [0, 1, 2, 3, 7, 8]; // Asset ID, Name, Manufacturer, Model, Employee, Status
+    
+    for (let i = 0; i < rows.length; i++) {
+        const cells = rows[i].getElementsByTagName('td');
+        if (cells.length === 0) continue; // Skip empty rows
+        
+        let show = true;
+        
+        // Check each filter
+        for (let j = 0; j < filters.length; j++) {
+            if (filters[j] === '') continue; // Skip empty filters
+            
+            if (j < colMap.length) {
+                const cellText = cells[colMap[j]] ? cells[colMap[j]].textContent.toLowerCase() : '';
+                if (!cellText.includes(filters[j])) {
+                    show = false;
+                    break;
+                }
+            }
+        }
+        
+        rows[i].style.display = show ? '' : 'none';
+    }
+}
+</script>
+<div class="modal fade" id="compareModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-bar-chart-steps me-2"></i>Asset Comparison</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div id="compareLoading" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="text-muted mt-2 mb-0">Loading comparison...</p>
+                </div>
+                <div class="table-responsive" id="compareTableWrap" style="display:none;">
+                    <table class="table table-bordered mb-0 align-middle">
+                        <thead id="compareTableHead"></thead>
+                        <tbody id="compareTableBody"></tbody>
+                    </table>
+                </div>
+                <div id="compareError" class="alert alert-warning m-3" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

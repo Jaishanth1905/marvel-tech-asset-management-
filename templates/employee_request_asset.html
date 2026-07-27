@@ -1,0 +1,64 @@
+{% extends "employee_portal_base.html" %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Request New Asset</h4>
+        <p class="text-muted mb-0">
+            Request a new device, accessory, or software asset.
+        </p>
+    </div>
+    <a href="{{ url_for('employee_my_assets') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>
+        Back to My Assets
+    </a>
+</div>
+<div class="card">
+    <div class="card-body p-4">
+        <form method="POST">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Requested Asset</label>
+                    <select name="requested_asset_type" class="form-select" required>
+                        <option value="">Select asset type</option>
+                        <option value="Laptop">Laptop</option>
+                        <option value="Desktop">Desktop</option>
+                        <option value="Monitor">Monitor</option>
+                        <option value="Headphones">Headphones</option>
+                        <option value="Keyboard">Keyboard</option>
+                        <option value="Mouse">Mouse</option>
+                        <option value="Pendrive">Pendrive</option>
+                        <option value="Docking Station">Docking Station</option>
+                        <option value="Mobile">Mobile</option>
+                        <option value="Printer">Printer</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Priority</label>
+                    <select name="priority" class="form-select" required>
+                        <option value="Low">Low</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="High">High</option>
+                        <option value="Critical">Critical</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-bold">Reason for Request</label>
+                    <textarea
+                        name="description"
+                        class="form-control"
+                        rows="5"
+                        required
+                        placeholder="Explain why you need this asset..."></textarea>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-marvel">
+                        <i class="bi bi-send me-1"></i>
+                        Submit Asset Request
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

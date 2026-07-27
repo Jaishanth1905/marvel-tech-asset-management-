@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <div class="text-uppercase text-muted small fw-bold mb-1">
+            Ticket Management
+        </div>
+        <h2 class="fw-bold mb-1">Tickets</h2>
+        <p class="text-muted mb-0">
+            {% if selected_unit %}
+                {{ selected_unit.country_flag or '' }}
+                {{ selected_unit.name }} Business Unit ·
+            {% endif %}
+            Review and manage employee support requests.
+        </p>
+    </div>
+</div>
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('tickets_dashboard') }}" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label fw-bold small">Category</label>
+                <select name="category" class="form-select">
+                    <option value="">All Categories</option>
+                    {% for cat in ['Hardware','Software','Network','Printer','Security','Other'] %}
+                    <option value="{{ cat }}" {{ 'selected' if category_filter == cat else '' }}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-bold small">Priority</label>
+                <select name="priority" class="form-select">
+                    <option value="">All Priorities</option>
+                    {% for pr in ['Low','Medium','High','Critical'] %}
+                    <option value="{{ pr }}" {{ 'selected' if priority_filter == pr else '' }}>{{ pr }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold small">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    {% for st in ['Open','Assigned','In Progress','Waiting for User','In Service','Service Completed','Received by Admin','Resolved','Closed'] %}
+                    <option value="{{ st }}" {{ 'selected' if status_filter == st else '' }}>{{ st }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-bold small">From</label>
+                <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-bold small">To</label>
+                <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+            </div>
+            <div class="col-12 d-flex gap-2">
+                <button type="submit" class="btn btn-marvel">
+                    <i class="bi bi-funnel me-1"></i>Apply Filters
+                </button>
+                <a href="{{ url_for('tickets_dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i>Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="row g-3 mb-4 row-cols-1 row-cols-sm-2 row-cols-lg-5">
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="small text-muted">Total Tickets</div>
+                <div class="fs-3 fw-bold">{{ ticket_summary.total }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card h-100 border-warning">
+            <div class="card-body text-center">
+                <div class="small text-muted">Pending Review</div>
+                <div class="fs-3 fw-bold text-warning">{{ ticket_summary.pending_review }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card h-100 border-danger">
+            <div class="card-body text-center">
+                <div class="small text-muted">Rejected</div>
+                <div class="fs-3 fw-bold text-danger">{{ ticket_summary.rejected }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card h-100 border-primary">
+            <div class="card-body text-center">
+                <div class="small text-muted">In Progress</div>
+                <div class="fs-3 fw-bold text-primary">{{ ticket_summary.in_progress }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card h-100 border-dark">
+            <div class="card-body text-center">
+                <div class="small text-muted">Closed</div>
+                <div class="fs-3 fw-bold">{{ ticket_summary.closed }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">Business Unit Tickets</h5>
+            <span class="text-muted small">{{ tickets|length }} record(s)</span>
+        </div>
+        {% if tickets %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr class="text-muted small">
+                        <th>Ticket</th>
+                        <th>Employee</th>
+                        <th>Asset</th>
+                        <th>Category</th>
+                        <th>Priority</th>
+                        <th>Approval</th>
+                        <th>Work Status</th>
+                        <th>Engineer</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ticket in tickets %}
+                    <tr>
+                        <td>
+                            <div class="fw-bold text-primary">
+                                {{ ticket.ticket_id }}
+                            </div>
+                            <small class="text-muted">
+                                {{ ticket.created_at.strftime('%d %b %Y') }}
+                            </small>
+                        </td>
+                        <td>
+                            <div class="fw-bold">{{ ticket.employee.name }}</div>
+                            <small class="text-muted">
+                                {{ ticket.employee.employee_code }}
+                            </small>
+                        </td>
+                        <td>
+                            {% if ticket.asset %}
+                                <div>{{ ticket.asset.asset_name }}</div>
+                                <small class="text-muted">
+                                    {{ ticket.asset.asset_id }}
+                                </small>
+                            {% else %}
+                                <span class="text-muted">No asset selected</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ ticket.category }}</td>
+                        <td>
+                            {% if ticket.priority == 'Critical' %}
+                                <span class="badge bg-danger">Critical</span>
+                            {% elif ticket.priority == 'High' %}
+                                <span class="badge bg-warning text-dark">High</span>
+                            {% elif ticket.priority == 'Medium' %}
+                                <span class="badge bg-primary">Medium</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Low</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if ticket.approval_status == 'Pending Review' %}
+                                <span class="badge bg-warning text-dark">
+                                    Pending Review
+                                </span>
+                            {% elif ticket.approval_status == 'Under Review' %}
+                                <span class="badge bg-info text-dark">
+                                    Under Review
+                                </span>
+                            {% elif ticket.approval_status == 'Approved' %}
+                                <span class="badge bg-success">
+                                    Approved
+                                </span>
+                            {% elif ticket.approval_status == 'Rejected' %}
+                                <span class="badge bg-danger">
+                                    Rejected
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary">
+                                    {{ ticket.approval_status }}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if ticket.status == 'Open' %}
+                                <span class="badge bg-warning text-dark">Open</span>
+                            {% elif ticket.status == 'Assigned' %}
+                                <span class="badge bg-info text-dark">Assigned</span>
+                            {% elif ticket.status == 'In Progress' %}
+                                <span class="badge bg-primary">In Progress</span>
+                            {% elif ticket.status == 'Waiting for User' %}
+                                <span class="badge bg-secondary">Waiting for User</span>
+                            {% elif ticket.status == 'Resolved' %}
+                                <span class="badge bg-success">Resolved</span>
+                            {% else %}
+                                <span class="badge bg-dark">Closed</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ ticket.assigned_engineer or 'Unassigned' }}
+                        </td>
+                        <td class="text-end">
+                            <a href="{{ url_for('ticket_detail', ticket_id=ticket.id) }}"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye me-1"></i>
+                                View / Review
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-ticket-detailed fs-1 text-muted"></i>
+            <h5 class="fw-bold mt-3">No tickets for this Business Unit</h5>
+            <p class="text-muted mb-0">
+                Tickets raised by employees in this Business Unit will appear here.
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

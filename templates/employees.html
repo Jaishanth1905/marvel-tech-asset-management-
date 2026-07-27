@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Employees</li>
+            </ol>
+        </nav>
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold"><i class="bi bi-people me-2 text-primary"></i>Employee Management</h2>
+                <p class="text-muted">Manage all employees and their asset assignments</p>
+            </div>
+            <a href="{{ url_for('add_employee') }}" class="btn btn-marvel">
+                <i class="bi bi-plus-lg me-1"></i>Add Employee
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Employee List Table with Column Filters ONLY -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-table me-2"></i>Employee List</span>
+        <span class="badge bg-primary">{{ employees|length }} Records</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle" id="employeesTable">
+                <thead>
+                    <tr>
+                        <th>
+                            Employee Name <i class="bi bi-funnel-fill ms-1 text-muted small"></i>
+                            <select class="table-filter" onchange="filterEmpTable(0, this.value)">
+                                <option value="">All</option>
+                                {% for emp in employees %}
+                                <option value="{{ emp.name }}">{{ emp.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </th>
+                        <th>
+                            Designation <i class="bi bi-funnel-fill ms-1 text-muted small"></i>
+                            <select class="table-filter" onchange="filterEmpTable(1, this.value)">
+                                <option value="">All</option>
+                                {% set designations = employees|map(attribute='designation')|unique|list %}
+                                {% for des in designations if des %}
+                                <option value="{{ des }}">{{ des }}</option>
+                                {% endfor %}
+                            </select>
+                        </th>
+                        <th>
+                            Department <i class="bi bi-funnel-fill ms-1 text-muted small"></i>
+                            <select class="table-filter" onchange="filterEmpTable(2, this.value)">
+                                <option value="">All</option>
+                                {% for dept in departments %}
+                                <option value="{{ dept }}">{{ dept }}</option>
+                                {% endfor %}
+                            </select>
+                        </th>
+                        <th>
+                            Team <i class="bi bi-funnel-fill ms-1 text-muted small"></i>
+                            <select class="table-filter" onchange="filterEmpTable(4, this.value)">
+                                <option value="">All</option>
+                                {% set teams = employees|map(attribute='team')|unique|list %}
+                                {% for t in teams if t %}
+                                <option value="{{ t }}">{{ t }}</option>
+                                {% endfor %}
+                            </select>
+                        </th>
+                        <th>
+                            Location <i class="bi bi-funnel-fill ms-1 text-muted small"></i>
+                            <select class="table-filter" onchange="filterEmpTable(5, this.value)">
+                                <option value="">All</option>
+                                {% set locs = employees|map(attribute='location')|unique|list %}
+                                {% for l in locs if l %}
+                                <option value="{{ l }}">{{ l }}</option>
+                                {% endfor %}
+                            </select>
+                        </th>
+                        <th>Work Mode</th>
+                        <th>Date Joined</th>
+                        <th>Assigned Assets</th>
+                        <th>
+                            Status <i class="bi bi-funnel-fill ms-1 text-muted small"></i>
+                            <select class="table-filter" onchange="filterEmpTable(9, this.value)">
+                                <option value="">All</option>
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                        </th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employee in employees %}
+                    <tr>
+                        <td class="fw-bold">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="icon-box icon-box-primary" style="width: 36px; height: 36px; font-size: 1rem;">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold">{{ employee.name }}</div>
+                                    <small class="text-muted">{{ employee.employee_code }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ employee.designation or '-' }}</td>
+                        <td>{{ employee.department or '-' }}</td>
+                        <td>{{ employee.team or '-' }}</td>
+                        <td>{{ employee.location or '-' }}</td>
+                        <td><span class="badge bg-info">{{ employee.work_mode }}</span></td>
+                        <td>{{ employee.date_of_joining|format_date if employee.date_of_joining else '-' }}</td>
+                        <td>
+                            {% set active_count = employee.assignments|selectattr('returned_date', 'none')|list|length %}
+                            <span class="badge bg-primary"><i class="bi bi-laptop me-1"></i>{{ active_count }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if employee.status == 'Active' else 'secondary' }}">
+                                {{ employee.status }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex gap-1 justify-content-center">
+                                <a href="{{ url_for('employee_detail', employee_id=employee.id) }}" class="btn btn-sm btn-outline-primary" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ url_for('edit_employee', employee_id=employee.id) }}" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% if employee.status == 'Active' %}
+                                <form method="POST" action="{{ url_for('delete_employee', employee_id=employee.id) }}" class="d-inline" onsubmit="return confirm('Deactivate this employee?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Deactivate">
+                                        <i class="bi bi-person-x"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="10" class="text-center py-5 text-muted">
+                            <i class="bi bi-people display-4 d-block mb-3"></i>
+                            <h5>No employees found</h5>
+                            <a href="{{ url_for('add_employee') }}" class="btn btn-marvel mt-3">
+                                <i class="bi bi-plus-lg me-1"></i>Add Employee
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Client-side table filtering for each column
+function filterEmpTable(columnIndex, filterValue) {
+    const table = document.getElementById('employeesTable');
+    const tbody = table.getElementsByTagName('tbody')[0];
+    const rows = tbody.getElementsByTagName('tr');
+    
+    // Get all active filters
+    const filters = [];
+    const selects = table.getElementsByTagName('thead')[0].getElementsByTagName('select');
+    for (let i = 0; i < selects.length; i++) {
+        filters.push(selects[i].value.toLowerCase());
+    }
+    
+    // Column mapping: select index -> cell index
+    const colMap = [0, 1, 2, 3, 4, 8]; // Name, Designation, Dept, BU, Team, Location, Status
+    
+    for (let i = 0; i < rows.length; i++) {
+        const cells = rows[i].getElementsByTagName('td');
+        if (cells.length === 0) continue;
+        
+        let show = true;
+        
+        for (let j = 0; j < filters.length; j++) {
+            if (filters[j] === '') continue;
+            
+            if (j < colMap.length) {
+                const cellText = cells[colMap[j]] ? cells[colMap[j]].textContent.toLowerCase() : '';
+                if (!cellText.includes(filters[j])) {
+                    show = false;
+                    break;
+                }
+            }
+        }
+        
+        rows[i].style.display = show ? '' : 'none';
+    }
+}
+</script>
+{% endblock %}

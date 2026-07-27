@@ -1,0 +1,890 @@
+{% extends "base.html" %}
+{% block extra_css %}
+<style>
+    .asset-hero {
+        position: relative;
+        overflow: hidden;
+        border-radius: 24px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        background:
+            radial-gradient(circle at top left, rgba(181, 32, 37, 0.14), transparent 34%),
+            radial-gradient(circle at top right, rgba(8, 145, 178, 0.12), transparent 32%),
+            var(--card-bg);
+        border: 1px solid var(--border);
+    }
+    .asset-hero-title {
+        font-size: 1.9rem;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        margin-bottom: 0.25rem;
+    }
+    .asset-meta-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        border-radius: 999px;
+        padding: 0.42rem 0.75rem;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.04);
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+    .asset-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        border-radius: 999px;
+        padding: 0.45rem 0.8rem;
+        font-size: 0.8rem;
+        font-weight: 800;
+        border: 1px solid transparent;
+    }
+    .health-score-badge {
+    cursor: pointer;
+    text-align: right;
+    padding: 0.5rem 1rem;
+    border-radius: 14px;
+    background: var(--card-bg-hover, rgba(0,0,0,0.03));
+    border: 1px solid var(--border, #e5e7eb);
+    transition: all 0.2s ease;
+}
+.health-score-badge:hover {
+    border-color: var(--primary, #b52025);
+    transform: translateY(-2px);
+}
+    .asset-status-badge.status-Assigned {
+        color: #059669;
+        background: rgba(5,150,105,0.1);
+        border-color: rgba(5,150,105,0.25);
+    }
+    .asset-status-badge.status-Available {
+        color: #d97706;
+        background: rgba(217,119,6,0.1);
+        border-color: rgba(217,119,6,0.25);
+    }
+    .asset-status-badge.status-Service {
+        color: #dc2626;
+        background: rgba(220,38,38,0.1);
+        border-color: rgba(220,38,38,0.25);
+    }
+    .asset-status-badge.status-Scrapped {
+        color: #6b7280;
+        background: rgba(107,114,128,0.1);
+        border-color: rgba(107,114,128,0.25);
+    }
+    .asset-shell-card {
+        border-radius: 20px;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        overflow: hidden;
+        height: 100%;
+    }
+    .asset-shell-header {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+    }
+    .asset-shell-body {
+        padding: 1rem;
+    }
+    .asset-image-preview {
+        width: 100%;
+        max-height: 260px;
+        object-fit: contain;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid var(--border);
+        padding: 0.75rem;
+    }
+    .qr-preview {
+        width: 140px;
+        height: 140px;
+        object-fit: contain;
+        border-radius: 16px;
+        background: white;
+        padding: 0.75rem;
+        border: 1px solid var(--border);
+    }
+    .accordion.asset-accordion {
+        --bs-accordion-border-color: var(--border);
+        --bs-accordion-border-radius: 18px;
+        --bs-accordion-inner-border-radius: 18px;
+        --bs-accordion-btn-focus-box-shadow: none;
+        --bs-accordion-active-bg: rgba(181,32,37,0.08);
+        --bs-accordion-active-color: var(--text-primary);
+        --bs-accordion-bg: var(--card-bg);
+        --bs-accordion-color: var(--text-primary);
+    }
+    .asset-accordion .accordion-item {
+        border-radius: 18px;
+        overflow: hidden;
+        margin-bottom: 0.85rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+    }
+    .asset-accordion .accordion-button {
+        background: var(--card-bg);
+        color: var(--text-primary);
+        font-weight: 800;
+        gap: 0.75rem;
+        padding: 1rem 1.1rem;
+    }
+    .asset-accordion .accordion-button:not(.collapsed) {
+        background: rgba(181,32,37,0.08);
+        color: var(--text-primary);
+        box-shadow: none;
+    }
+    .asset-accordion .accordion-button::after {
+        filter: grayscale(1);
+    }
+    .accordion-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(181,32,37,0.1);
+        color: var(--primary);
+        flex-shrink: 0;
+    }
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+    }
+    .info-item {
+        border-radius: 14px;
+        padding: 0.85rem;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid var(--border);
+        min-height: 72px;
+    }
+    .info-label {
+        display: block;
+        color: var(--text-secondary);
+        font-size: 0.72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 0.25rem;
+    }
+    .info-value {
+        color: var(--text-primary);
+        font-weight: 700;
+        word-break: break-word;
+    }
+    .info-value.mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.9rem;
+    }
+    .action-panel {
+        border-radius: 20px;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+    .action-panel-header {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+    }
+    .action-panel-body {
+        padding: 1rem;
+    }
+    .timeline-row {
+        display: flex;
+        gap: 0.75rem;
+        padding: 0.85rem 0;
+        border-bottom: 1px solid var(--border);
+    }
+    .timeline-row:last-child {
+        border-bottom: none;
+    }
+    .timeline-dot {
+        width: 34px;
+        height: 34px;
+        border-radius: 12px;
+        background: rgba(181,32,37,0.1);
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .timeline-title {
+        font-weight: 800;
+        font-size: 0.9rem;
+    }
+    .timeline-meta {
+        color: var(--text-secondary);
+        font-size: 0.78rem;
+    }
+    .compact-form {
+        display: grid;
+        gap: 0.75rem;
+    }
+    .section-help {
+        color: var(--text-secondary);
+        font-size: 0.86rem;
+        margin-bottom: 1rem;
+    }
+    @media (max-width: 768px) {
+        .asset-hero-title {
+            font-size: 1.45rem;
+        }
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="{{ url_for('index') }}">Dashboard</a>
+                </li>
+                {% if asset.category %}
+                <li class="breadcrumb-item">
+                    {% if asset.business_unit %}
+                    <a href="{{ url_for('business_unit_category_assets', country_code=asset.business_unit.code, category_id=asset.category.id) }}">
+                        {{ asset.category.name }}
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('category_assets', category_id=asset.category.id) }}">
+                        {{ asset.category.name }}
+                    </a>
+                    {% endif %}
+                </li>
+                {% endif %}
+                <li class="breadcrumb-item active">{{ asset.asset_id }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+<div class="asset-hero">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+        <div>
+            <span class="asset-status-badge status-{{ asset.current_status }}">
+                <i class="bi bi-circle-fill" style="font-size: 0.45rem;"></i>
+                {{ asset.current_status }}
+            </span>
+            <h1 class="asset-hero-title mt-3">{{ asset.asset_id }} — {{ asset.asset_name }}</h1>
+            <div class="d-flex flex-wrap gap-2 mt-3">
+                <span class="asset-meta-pill">
+                    <i class="bi bi-layers"></i>
+                    {{ asset.category.name if asset.category else 'No Category' }}
+                </span>
+                <span class="asset-meta-pill">
+                    <i class="bi bi-tag"></i>
+                    {% if asset.asset_type == 'Shared' %}IP{% else %}{{ asset.asset_type }}{% endif %}
+                </span>
+                <span class="asset-meta-pill">
+                    <i class="bi bi-building"></i>
+                    {{ asset.business_unit.name if asset.business_unit else selected_unit.name if selected_unit else '-' }}
+                </span>
+                {% if current_employee %}
+                <span class="asset-meta-pill">
+                    <i class="bi bi-person-check"></i>
+                    Assigned to {{ current_employee.name }}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="d-flex flex-column align-items-end gap-2">
+            <div class="health-score-badge" onclick="toggleHealthBreakdown()" title="Click to see health breakdown">
+                <div class="text-muted small fw-bold text-uppercase">Health</div>
+                <div class="d-flex align-items-center gap-2">
+                    <h3 class="fw-bold mb-0">{{ health_score.overall }}%</h3>
+                    <span class="badge bg-{{ health_score.color }}">
+                        <i class="bi bi-circle-fill" style="font-size:0.5rem;"></i> {{ health_score.label }}
+                    </span>
+                </div>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ url_for('edit_asset', asset_id=asset.id) }}" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil me-1"></i>Edit
+                </a>
+            {% if asset.category %}
+                {% if asset.business_unit %}
+                <a href="{{ url_for('business_unit_category_assets', country_code=asset.business_unit.code, category_id=asset.category.id) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Back
+                </a>
+                {% else %}
+                <a href="{{ url_for('category_assets', category_id=asset.category.id) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Back
+                </a>
+                {% endif %}
+            {% else %}
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Back
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<div id="healthBreakdownPanel" class="row g-3 mb-4" style="display:none;">
+    <div class="col-md-3 col-sm-6">
+        <div class="card h-100 text-center p-3" style="border-left: 3px solid #0891b2;">
+            <h6 class="text-muted mb-2"><i class="bi bi-shield-check me-1"></i>Warranty</h6>
+            <h4 class="fw-bold mb-0">{{ health_score.warranty_score }}%</h4>
+            <small class="text-muted">{{ health_score.warranty_label }}</small>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="card h-100 text-center p-3" style="border-left: 3px solid #d97706;">
+            <h6 class="text-muted mb-2"><i class="bi bi-calendar3 me-1"></i>Age</h6>
+            <h4 class="fw-bold mb-0">{{ health_score.age_score }}%</h4>
+            <small class="text-muted">{{ health_score.years_owned }} yrs owned</small>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="card h-100 text-center p-3" style="border-left: 3px solid #059669;">
+            <h6 class="text-muted mb-2"><i class="bi bi-graph-down me-1"></i>Depreciation</h6>
+            <h4 class="fw-bold mb-0">{{ health_score.depreciation_score }}%</h4>
+            <small class="text-muted">
+                {{ health_score.current_value|format_currency if health_score.current_value is not none else '-' }} remaining
+            </small>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="card h-100 text-center p-3" style="border-left: 3px solid #dc2626;">
+            <h6 class="text-muted mb-2"><i class="bi bi-tools me-1"></i>Repairs</h6>
+            <h4 class="fw-bold mb-0">{{ health_score.repair_score }}%</h4>
+            <small class="text-muted">{{ health_score.service_count }} service record{{ 's' if health_score.service_count != 1 else '' }}</small>
+        </div>
+    </div>
+</div>
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="asset-shell-card">
+            <div class="asset-shell-header">
+                <div>
+                    <h5 class="fw-bold mb-1">Asset Media</h5>
+                    <p class="text-muted mb-0 small">Image and QR access details</p>
+                </div>
+            </div>
+            <div class="asset-shell-body">
+                <div class="row g-4 align-items-center">
+                    <div class="col-md-8">
+                        {% if asset_image_url %}
+                        <img src="{{ asset_image_url }}" class="asset-image-preview" alt="{{ asset.asset_name }}">
+                        {% else %}
+                        <div class="asset-image-preview d-flex flex-column justify-content-center align-items-center text-muted" style="min-height: 220px;">
+                            <i class="bi bi-image display-5 mb-2"></i>
+                            No asset image uploaded
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4 text-center">
+                        {% if qr_base64 %}
+                        <img src="{{ qr_base64 }}" class="qr-preview" alt="QR Code">
+                        <p class="text-muted small mt-2 mb-0">Scan for public asset view</p>
+                        {% else %}
+                        <div class="text-muted">QR code unavailable</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="asset-shell-card">
+            <div class="asset-shell-header">
+                <div>
+                    <h5 class="fw-bold mb-1">Current Assignment</h5>
+                    <p class="text-muted mb-0 small">Active employee allocation</p>
+                </div>
+            </div>
+            <div class="asset-shell-body">
+                {% if current_employee %}
+                <div class="info-item mb-3">
+                    <span class="info-label">Employee</span>
+                    <span class="info-value">{{ current_employee.name }}</span>
+                </div>
+                <div class="info-item mb-3">
+                    <span class="info-label">Employee Code</span>
+                    <span class="info-value">{{ current_employee.employee_code }}</span>
+                </div>
+                <form method="POST" action="{{ url_for('return_asset', asset_id=asset.id) }}">
+                    <button type="submit" class="btn btn-warning w-100">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Return Asset
+                    </button>
+                </form>
+                {% else %}
+                <p class="text-muted">This asset is not currently assigned.</p>
+                {% if asset.current_status == 'Available' and asset.asset_type == 'IT' %}
+                <button class="btn btn-marvel w-100" data-bs-toggle="collapse" data-bs-target="#assignPanel">
+                    <i class="bi bi-person-plus me-1"></i>
+                    {% if assignments|length > 0 %}Reassign{% else %}Assign{% endif %}
+                </button>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% if asset.current_status == 'Available' and asset.asset_type == 'IT' and not current_employee %}
+<div class="collapse mb-4" id="assignPanel">
+    <div class="action-panel">
+        <div class="action-panel-header">
+            <h5 class="fw-bold mb-0">
+                <i class="bi bi-person-plus me-2 text-primary"></i>
+                {% if assignments|length > 0 %}Reassign Asset{% else %}Assign Asset{% endif %}
+            </h5>
+        </div>
+        <div class="action-panel-body">
+            <form method="POST" action="{{ url_for('assign_asset', asset_id=asset.id) }}">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Employee</label>
+                        <select name="employee_id" class="form-select" required>
+                            <option value="">Select Employee...</option>
+                            {% for emp in employees %}
+                            <option value="{{ emp.id }}">{{ emp.name }} — {{ emp.employee_code }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Assigned Date</label>
+                        <input type="date" name="assigned_date" class="form-control" value="{{ today }}" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Assigned By</label>
+                        <input type="text" name="assigned_by" class="form-control" value="Admin">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-marvel w-100">
+                            Save
+                        </button>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-bold">Remarks</label>
+                        <input type="text" name="remarks" class="form-control" placeholder="Optional remarks">
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+<!-- Accordion Information Sections -->
+<div class="accordion asset-accordion" id="assetDetailsAccordion">
+    <!-- Tickets -->
+<div class="accordion-item">
+    <h2 class="accordion-header" id="headingTickets">
+        <button
+            class="accordion-button collapsed"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#collapseTickets"
+            aria-expanded="false"
+            aria-controls="collapseTickets">
+            <span class="accordion-icon">
+                <i class="bi bi-ticket-detailed"></i>
+            </span>
+            Tickets
+        </button>
+    </h2>
+    <div
+        id="collapseTickets"
+        class="accordion-collapse collapse"
+        aria-labelledby="headingTickets"
+        data-bs-parent="#assetDetailsAccordion">
+        <div class="accordion-body">
+            {% if asset.tickets %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th>Ticket</th>
+                            <th>Employee</th>
+                            <th>Category</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Engineer</th>
+                            <th>Created</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ticket in asset.tickets %}
+                        <tr>
+                            <td class="fw-bold text-primary">
+                                {{ ticket.ticket_id }}
+                            </td>
+                            <td>
+                                {{ ticket.employee.name if ticket.employee else '-' }}
+                            </td>
+                            <td>{{ ticket.category }}</td>
+                            <td>{{ ticket.priority }}</td>
+                            <td>{{ ticket.status }}</td>
+                            <td>
+                                {{ ticket.assigned_engineer.name if ticket.assigned_engineer else '-' }}
+                            </td>
+                            <td>
+                                {{ ticket.created_at|format_date if ticket.created_at else '-' }}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('ticket_detail', ticket_id=ticket.id) }}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4 text-muted">
+                <i class="bi bi-ticket-detailed display-6 d-block mb-2"></i>
+                No tickets found for this asset.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+    <!-- Employee Information -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingEmployee">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEmployee" aria-expanded="true" aria-controls="collapseEmployee">
+                <span class="accordion-icon"><i class="bi bi-person"></i></span>
+                Employee Information
+            </button>
+        </h2>
+        <div id="collapseEmployee" class="accordion-collapse collapse show" aria-labelledby="headingEmployee" data-bs-parent="#assetDetailsAccordion">
+            <div class="accordion-body">
+                <p class="section-help">Employee details stored directly on the asset record, plus current assignment context.</p>
+                <div class="info-grid">
+                    <div class="info-item"><span class="info-label">Employee ID</span><span class="info-value">{{ asset.employee_id or current_employee.employee_code if current_employee else '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Employee Name</span><span class="info-value">{{ asset.employee_name or current_employee.name if current_employee else '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Date of Joining</span><span class="info-value">{{ asset.date_of_joining|format_date }}</span></div>
+                    <div class="info-item"><span class="info-label">Designation</span><span class="info-value">{{ asset.employee_designation or current_employee.designation if current_employee else '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Team</span><span class="info-value">{{ asset.employee_team or current_employee.team if current_employee else '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Location</span><span class="info-value">{{ asset.employee_location or current_employee.location if current_employee else '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Work Mode</span><span class="info-value">{{ asset.work_mode or current_employee.work_mode if current_employee else '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Employee Status</span><span class="info-value">{{ asset.employee_status or current_employee.status if current_employee else '-' }}</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Asset Information -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingAsset">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAsset" aria-expanded="false" aria-controls="collapseAsset">
+                <span class="accordion-icon"><i class="bi bi-box-seam"></i></span>
+                Asset Information
+            </button>
+        </h2>
+        <div id="collapseAsset" class="accordion-collapse collapse" aria-labelledby="headingAsset" data-bs-parent="#assetDetailsAccordion">
+            <div class="accordion-body">
+                <div class="info-grid">
+                    <div class="info-item"><span class="info-label">Asset ID</span><span class="info-value">{{ asset.asset_id }}</span></div>
+                    <div class="info-item"><span class="info-label">Asset Name</span><span class="info-value">{{ asset.asset_name }}</span></div>
+                    <div class="info-item"><span class="info-label">Category</span><span class="info-value">{{ asset.category.name if asset.category else '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Asset Type</span><span class="info-value">{% if asset.asset_type == 'Shared' %}IP{% else %}{{ asset.asset_type }}{% endif %}</span></div>
+                    <div class="info-item"><span class="info-label">Business Unit</span><span class="info-value">{{ asset.business_unit.name if asset.business_unit else '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Status</span><span class="info-value">{{ asset.current_status }}</span></div>
+                    <div class="info-item"><span class="info-label">Device Type</span><span class="info-value">{{ asset.device_type or '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Computer Name</span><span class="info-value">{{ asset.computer_name or '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Domain Name</span><span class="info-value">{{ asset.domain_name or '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Purchase Bill Date</span><span class="info-value">{{ asset.purchase_bill_date|format_date }}</span></div>
+                    <div class="info-item"><span class="info-label">Additional Monitor</span><span class="info-value">{{ asset.additional_monitor or '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Monitor Assigned Date</span><span class="info-value">{{ asset.monitor_assigned_date|format_date }}</span></div>
+                    <div class="info-item"><span class="info-label">Headphone</span><span class="info-value">{{ asset.headphone or '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Headphone Assigned Date</span><span class="info-value">{{ asset.headphone_assigned_date|format_date }}</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Hardware Information -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingHardware">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseHardware" aria-expanded="false" aria-controls="collapseHardware">
+                <span class="accordion-icon"><i class="bi bi-cpu"></i></span>
+                Hardware Information
+            </button>
+        </h2>
+        <div id="collapseHardware" class="accordion-collapse collapse" aria-labelledby="headingHardware" data-bs-parent="#assetDetailsAccordion">
+            <div class="accordion-body">
+                <div class="info-grid">
+                    <div class="info-item"><span class="info-label">Manufacturer</span><span class="info-value">{{ asset.manufacturer or '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Model Name</span><span class="info-value">{{ asset.model_name or '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Model Number</span><span class="info-value">{{ asset.model_number or '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Serial Number</span><span class="info-value mono">{{ asset.serial_number or '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Processor</span><span class="info-value">{{ asset.processor_description or '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Total Memory</span><span class="info-value">{{ asset.total_memory or '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Total Hard Drive</span><span class="info-value">{{ asset.total_hard_drive or '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Device ID</span><span class="info-value mono">{{ asset.device_id or '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Product ID</span><span class="info-value mono">{{ asset.product_id or '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">System Type</span><span class="info-value">{{ asset.system_type or '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Display Info</span><span class="info-value">{{ asset.display_info or '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Monitor Info</span><span class="info-value">{{ asset.monitor_info or '-' }}</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Software Information -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingSoftware">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSoftware" aria-expanded="false" aria-controls="collapseSoftware">
+                <span class="accordion-icon"><i class="bi bi-window"></i></span>
+                Software Information
+            </button>
+        </h2>
+        <div id="collapseSoftware" class="accordion-collapse collapse" aria-labelledby="headingSoftware" data-bs-parent="#assetDetailsAccordion">
+            <div class="accordion-body">
+                <div class="info-grid">
+                    <div class="info-item"><span class="info-label">Operating System</span><span class="info-value">{{ asset.operating_system or '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Microsoft OS Key</span><span class="info-value mono">{{ asset.microsoft_os_key or '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Office Key / Login</span><span class="info-value">{{ asset.office_key_login or '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Outlook Mail ID</span><span class="info-value">{{ asset.outlook_mail_id or '-' }}</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Network Information -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingNetwork">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNetwork" aria-expanded="false" aria-controls="collapseNetwork">
+                <span class="accordion-icon"><i class="bi bi-router"></i></span>
+                Network Information
+            </button>
+        </h2>
+        <div id="collapseNetwork" class="accordion-collapse collapse" aria-labelledby="headingNetwork" data-bs-parent="#assetDetailsAccordion">
+            <div class="accordion-body">
+                <div class="info-grid">
+                    <div class="info-item"><span class="info-label">LAN MAC Address</span><span class="info-value mono">{{ asset.lan_mac_address or '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">WiFi MAC Address</span><span class="info-value mono">{{ asset.wifi_mac_address or '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">IP Address</span><span class="info-value mono">{{ asset.ip_address or '-' }}</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Security Information -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingSecurity">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSecurity" aria-expanded="false" aria-controls="collapseSecurity">
+                <span class="accordion-icon"><i class="bi bi-shield-lock"></i></span>
+                Security Information
+            </button>
+        </h2>
+        <div id="collapseSecurity" class="accordion-collapse collapse" aria-labelledby="headingSecurity" data-bs-parent="#assetDetailsAccordion">
+            <div class="accordion-body">
+                <div class="info-grid">
+                    <div class="info-item"><span class="info-label">Antivirus</span><span class="info-value">{{ asset.antivirus or '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Local Admin Password</span><span class="info-value mono">{{ asset.local_admin_password or '-' }}</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Financial Information -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingFinancial">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFinancial" aria-expanded="false" aria-controls="collapseFinancial">
+                <span class="accordion-icon"><i class="bi bi-cash-stack"></i></span>
+                Financial Information
+            </button>
+        </h2>
+        <div id="collapseFinancial" class="accordion-collapse collapse" aria-labelledby="headingFinancial" data-bs-parent="#assetDetailsAccordion">
+            <div class="accordion-body">
+                <div class="info-grid">
+                    <div class="info-item"><span class="info-label">Vendor</span><span class="info-value">{{ asset.vendor.name if asset.vendor else '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Purchase Date</span><span class="info-value">{{ asset.purchase_date|format_date }}</span></div>
+                    <div class="info-item"><span class="info-label">Warranty Expiry</span><span class="info-value">{{ asset.warranty_expiry|format_date }}</span></div>
+                    <div class="info-item"><span class="info-label">Invoice Number</span><span class="info-value">{{ asset.invoice_number or '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Cost / Item</span><span class="info-value text-primary">{{ asset.cost|format_currency }}</span></div>
+                    <div class="info-item"><span class="info-label">Quantity</span><span class="info-value">{{ asset.quantity }}</span></div>
+                    <div class="info-item"><span class="info-label">Total Cost</span><span class="info-value text-primary">{{ asset.total_cost|format_currency }}</span></div>
+                    <div class="info-item"><span class="info-label">Asset Value Amount</span><span class="info-value">{{ asset.asset_value_amount|format_currency }}</span></div>
+                    {% if cost_per_employee %}
+                    <div class="info-item"><span class="info-label">Cost / Employee</span><span class="info-value">{{ cost_per_employee|format_currency }}</span></div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Lower Management Panels -->
+<div class="row g-4 mt-2">
+    <div class="col-lg-6">
+        <div class="action-panel">
+            <div class="action-panel-header">
+                <h5 class="fw-bold mb-0">
+                    <i class="bi bi-clock-history me-2 text-primary"></i>Assignment History
+                </h5>
+            </div>
+            <div class="action-panel-body">
+                {% for assignment in assignments %}
+                <div class="timeline-row">
+                    <div class="timeline-dot"><i class="bi bi-person-check"></i></div>
+                    <div>
+                        <div class="timeline-title">
+                            {{ assignment.employee.name if assignment.employee else 'Unknown Employee' }}
+                        </div>
+                        <div class="timeline-meta">
+                            Assigned: {{ assignment.assigned_date|format_date }}
+                            {% if assignment.returned_date %}
+                            · Returned: {{ assignment.returned_date|format_date }}
+                            {% else %}
+                            · Active
+                            {% endif %}
+                        </div>
+                        {% if assignment.remarks %}
+                        <div class="timeline-meta">{{ assignment.remarks }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No assignment history found.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="action-panel">
+            <div class="action-panel-header">
+                <h5 class="fw-bold mb-0">
+                    <i class="bi bi-tools me-2 text-primary"></i>Service History
+                </h5>
+            </div>
+            <div class="action-panel-body">
+                {% for service in services %}
+                <div class="timeline-row">
+                    <div class="timeline-dot"><i class="bi bi-wrench"></i></div>
+                    <div class="w-100">
+                        <div class="timeline-title">{{ service.service_vendor or 'Service Vendor' }}</div>
+                        <div class="timeline-meta">
+                            {{ service.issue_description or '-' }}
+                        </div>
+                        <div class="timeline-meta">
+                            Outward: {{ service.outward_date|format_date }}
+                            {% if service.inward_date %}
+                            · Inward: {{ service.inward_date|format_date }}
+                            {% endif %}
+                            · {{ service.status }}
+                        </div>
+                        {% if service.status == 'Out for Service' %}
+                        <form method="POST" action="{{ url_for('service_return', service_id=service.id) }}" class="row g-2 mt-2">
+                            <div class="col-md-5">
+                                <input type="text" name="inward_no" class="form-control form-control-sm" placeholder="Inward No">
+                            </div>
+                            <div class="col-md-5">
+                                <input type="date" name="inward_date" class="form-control form-control-sm" value="{{ today }}" required>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-sm btn-success w-100">Return</button>
+                            </div>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No service history found.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row g-4 mt-2">
+    <div class="col-lg-6">
+        <div class="action-panel">
+            <div class="action-panel-header">
+                <h5 class="fw-bold mb-0">
+                    <i class="bi bi-upload me-2 text-primary"></i>Documents
+                </h5>
+            </div>
+            <div class="action-panel-body">
+                {% for doc in documents %}
+                <div class="asset-list-row d-flex justify-content-between align-items-center py-2 border-bottom">
+                    <div>
+                        <strong>{{ doc.doc_type }}</strong>
+                        <small class="text-muted d-block">{{ doc.file_name }}</small>
+                    </div>
+                    <a href="{{ url_for('download_file', doc_id=doc.id) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-download"></i>
+                    </a>
+                </div>
+                {% else %}
+                <p class="text-muted">No documents uploaded.</p>
+                {% endfor %}
+                <form method="POST" action="{{ url_for('upload_document', asset_id=asset.id) }}" enctype="multipart/form-data" class="compact-form mt-3">
+                    <select name="doc_type" class="form-select" required>
+                        <option value="">Document Type...</option>
+                        <option value="Quotation">Quotation</option>
+                        <option value="PurchaseOrder">Purchase Order</option>
+                        <option value="Invoice">Invoice</option>
+                        <option value="Warranty">Warranty</option>
+                        <option value="ServiceBill">Service Bill</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <input type="file" name="document" class="form-control" accept=".pdf" required>
+                    <button class="btn btn-marvel">
+                        <i class="bi bi-upload me-1"></i>Upload PDF
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="action-panel">
+            <div class="action-panel-header">
+                <h5 class="fw-bold mb-0">
+                    <i class="bi bi-exclamation-triangle me-2 text-primary"></i>Lifecycle Actions
+                </h5>
+            </div>
+            <div class="action-panel-body">
+                {% if asset.current_status != 'Scrapped' %}
+                <form method="POST" action="{{ url_for('add_service', asset_id=asset.id) }}" enctype="multipart/form-data" class="compact-form mb-4">
+                    <h6 class="fw-bold">Send for Service</h6>
+                    <input type="text" name="service_vendor" class="form-control" placeholder="Service Vendor">
+                    <input type="text" name="issue_description" class="form-control" placeholder="Issue Description">
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <input type="text" name="outward_no" class="form-control" placeholder="Outward No">
+                        </div>
+                        <div class="col-md-6">
+                            <input type="date" name="outward_date" class="form-control" value="{{ today }}">
+                        </div>
+                    </div>
+                    <input type="number" name="cost" class="form-control" placeholder="Service Cost" step="0.01">
+                    <input type="file" name="service_bill" class="form-control" accept=".pdf">
+                    <button class="btn btn-outline-primary">
+                        <i class="bi bi-tools me-1"></i>Send to Service
+                    </button>
+                </form>
+                <hr>
+                <form method="POST" action="{{ url_for('scrap_asset', asset_id=asset.id) }}" class="compact-form" onsubmit="return confirm('Scrap this asset? This action changes the asset status to Scrapped.');">
+                    <h6 class="fw-bold text-danger">Scrap Asset</h6>
+                    <input type="date" name="scrap_date" class="form-control" value="{{ today }}">
+                    <input type="text" name="reason" class="form-control" placeholder="Reason" required>
+                    <input type="text" name="approved_by" class="form-control" placeholder="Approved By" value="Admin">
+                    <input type="text" name="remarks" class="form-control" placeholder="Remarks">
+                    <button class="btn btn-outline-danger">
+                        <i class="bi bi-trash me-1"></i>Scrap Asset
+                    </button>
+                </form>
+                {% else %}
+                <p class="text-muted mb-0">This asset has already been scrapped.</p>
+                {% if scrap %}
+                <div class="info-grid mt-3">
+                    <div class="info-item"><span class="info-label">Scrap Date</span><span class="info-value">{{ scrap.scrap_date|format_date }}</span></div>
+                    <div class="info-item"><span class="info-label">Approved By</span><span class="info-value">{{ scrap.approved_by or '-' }}</span></div>
+                    <div class="info-item"><span class="info-label">Reason</span><span class="info-value">{{ scrap.reason }}</span></div>
+                    <div class="info-item"><span class="info-label">Remarks</span><span class="info-value">{{ scrap.remarks or '-' }}</span></div>
+                </div>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

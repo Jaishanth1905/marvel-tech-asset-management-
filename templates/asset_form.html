@@ -1,0 +1,628 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    .form-section-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin: 1.5rem 0 1rem 0;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--primary);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+    }
+    .form-section-content {
+        display: block;
+    }
+    .form-section-content.collapsed {
+        display: none;
+    }
+    .toggle-icon {
+        transition: transform 0.3s;
+        margin-left: auto;
+    }
+    .form-section-title.collapsed .toggle-icon {
+        transform: rotate(-90deg);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('business_unit') }}">Business Unit</a></li>
+                <li class="breadcrumb-item active">{{ 'Edit Asset' if asset else 'Add New Asset' }}</li>
+            </ol>
+        </nav>
+        <h2 class="fw-bold">
+            <i class="bi bi-{{ 'pencil' if asset else 'plus-circle' }} me-2 text-primary"></i>
+            {{ 'Edit Asset' if asset else 'Add New Asset' }}
+        </h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-box-seam me-2"></i>Asset Details</span>
+                <span class="badge bg-primary">{{ asset.asset_id if asset else 'New' }}</span>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('edit_asset', asset_id=asset.id) if asset else url_for('add_asset') }}" 
+                      enctype="multipart/form-data" id="assetForm">
+                    
+                    <!-- ============================================ -->
+                    <!-- BASIC INFORMATION                            -->
+                    <!-- ============================================ -->
+                    <div class="form-section-title" onclick="toggleSection(this)">
+                        <i class="bi bi-info-circle"></i> Basic Information
+                        <i class="bi bi-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="form-section-content">
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Asset Name <span class="text-danger">*</span></label>
+                                <input type="text" name="asset_name" class="form-control" required 
+                                       value="{{ asset.asset_name if asset else '' }}" placeholder="e.g. Dell Latitude 5440">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Category <span class="text-danger">*</span></label>
+                                <select name="category_id" class="form-select" required {{ 'disabled' if asset else '' }} id="categorySelect">
+                                    <option value="">Select Category...</option>
+                                    {% for cat in categories %}
+                                    <option value="{{ cat.id }}" data-type="{{ cat.asset_type }}" {{ 'selected' if asset and asset.category_id == cat.id else '' }}>
+                                        {{ cat.name }} ({% if cat.asset_type == 'Shared' %}IP{% else %}{{ cat.asset_type }}{% endif %})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                {% if asset %}
+                                <input type="hidden" name="category_id" value="{{ asset.category_id }}">
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Asset ID</label>
+                                <input type="text" class="form-control" disabled 
+                                       value="{{ asset.asset_id if asset else 'Auto-generated' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Device Type</label>
+                                <input type="text" name="device_type" class="form-control" 
+                                       value="{{ asset.device_type if asset else '' }}" placeholder="e.g. Laptop, Desktop">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Asset Type</label>
+                                <input type="text" class="form-control" disabled 
+                                       value="{% if asset %}{% if asset.asset_type == 'Shared' %}IP{% else %}{{ asset.asset_type }}{% endif %}{% else %}Auto-detected{% endif %}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Manufacturer</label>
+                                <input type="text" name="manufacturer" class="form-control" 
+                                       value="{{ asset.manufacturer if asset else '' }}" placeholder="e.g. Dell, HP, Lenovo">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Serial Number</label>
+                                <input type="text" name="serial_number" class="form-control" 
+                                       value="{{ asset.serial_number if asset else '' }}" placeholder="e.g. SN123456789">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Model Name</label>
+                                <input type="text" name="model_name" class="form-control" 
+                                       value="{{ asset.model_name if asset else '' }}" placeholder="e.g. Latitude">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Model Number</label>
+                                <input type="text" name="model_number" class="form-control" 
+                                       value="{{ asset.model_number if asset else '' }}" placeholder="e.g. DL5440">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ============================================ -->
+                    <!-- EMPLOYEE INFORMATION                         -->
+                    <!-- ============================================ -->
+                    <div class="form-section-title" onclick="toggleSection(this)">
+                        <i class="bi bi-person-badge"></i> Employee Information
+                        <i class="bi bi-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="form-section-content">
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Employee ID</label>
+                                <input type="text" name="employee_id" class="form-control" 
+                                       value="{{ asset.employee_id if asset else '' }}" placeholder="e.g. EMP001">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Employee Name</label>
+                                <input type="text" name="employee_name" class="form-control" 
+                                       value="{{ asset.employee_name if asset else '' }}" placeholder="e.g. John Doe">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Date of Joining</label>
+                                <input type="date" name="date_of_joining" class="form-control" 
+                                       value="{{ asset.date_of_joining if asset else '' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Designation</label>
+                                <input type="text" name="employee_designation" class="form-control" 
+                                       value="{{ asset.employee_designation if asset else '' }}" placeholder="e.g. Software Engineer">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Team</label>
+                                <input type="text" name="employee_team" class="form-control" 
+                                       value="{{ asset.employee_team if asset else '' }}" placeholder="e.g. Development">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Location</label>
+                                <input type="text" name="employee_location" class="form-control" 
+                                       value="{{ asset.employee_location if asset else '' }}" placeholder="e.g. Chennai">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Work Mode</label>
+                                <select name="work_mode" class="form-select">
+                                    <option value="">Select...</option>
+                                    <option value="Work From Office" {{ 'selected' if asset and asset.work_mode == 'Work From Office' else '' }}>Work From Office</option>
+                                    <option value="Work From Home" {{ 'selected' if asset and asset.work_mode == 'Work From Home' else '' }}>Work From Home</option>
+                                    <option value="Hybrid" {{ 'selected' if asset and asset.work_mode == 'Hybrid' else '' }}>Hybrid</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Employee Status</label>
+                                <select name="employee_status" class="form-select">
+                                    <option value="">Select...</option>
+                                    <option value="Active" {{ 'selected' if asset and asset.employee_status == 'Active' else '' }}>Active</option>
+                                    <option value="Inactive" {{ 'selected' if asset and asset.employee_status == 'Inactive' else '' }}>Inactive</option>
+                                    <option value="On Leave" {{ 'selected' if asset and asset.employee_status == 'On Leave' else '' }}>On Leave</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ============================================ -->
+                    <!-- ASSET DETAILS                                -->
+                    <!-- ============================================ -->
+                    <div class="form-section-title" onclick="toggleSection(this)">
+                        <i class="bi bi-box-seam"></i> Asset Details
+                        <i class="bi bi-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="form-section-content">
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Additional Monitor</label>
+                                <select name="additional_monitor" class="form-select">
+                                    <option value="">Select...</option>
+                                    <option value="Yes" {{ 'selected' if asset and asset.additional_monitor == 'Yes' else '' }}>Yes</option>
+                                    <option value="No" {{ 'selected' if asset and asset.additional_monitor == 'No' else '' }}>No</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Monitor Assigned Date</label>
+                                <input type="date" name="monitor_assigned_date" class="form-control" 
+                                       value="{{ asset.monitor_assigned_date if asset else '' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Headphone</label>
+                                <select name="headphone" class="form-select">
+                                    <option value="">Select...</option>
+                                    <option value="Yes" {{ 'selected' if asset and asset.headphone == 'Yes' else '' }}>Yes</option>
+                                    <option value="No" {{ 'selected' if asset and asset.headphone == 'No' else '' }}>No</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Headphone Assigned Date</label>
+                                <input type="date" name="headphone_assigned_date" class="form-control" 
+                                       value="{{ asset.headphone_assigned_date if asset else '' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Computer Name</label>
+                                <input type="text" name="computer_name" class="form-control" 
+                                       value="{{ asset.computer_name if asset else '' }}" placeholder="e.g. DESKTOP-ABC123">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Domain Name</label>
+                                <input type="text" name="domain_name" class="form-control" 
+                                       value="{{ asset.domain_name if asset else '' }}" placeholder="e.g. marveltech.local">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ============================================ -->
+                    <!-- HARDWARE INFORMATION                         -->
+                    <!-- ============================================ -->
+                    <div class="form-section-title" onclick="toggleSection(this)">
+                        <i class="bi bi-cpu"></i> Hardware Information
+                        <i class="bi bi-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="form-section-content">
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Processor Description</label>
+                                <input type="text" name="processor_description" class="form-control" 
+                                       value="{{ asset.processor_description if asset else '' }}" placeholder="e.g. Intel Core i7-12700H">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Total Memory</label>
+                                <input type="text" name="total_memory" class="form-control" 
+                                       value="{{ asset.total_memory if asset else '' }}" placeholder="e.g. 16 GB">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Total Hard Drive</label>
+                                <input type="text" name="total_hard_drive" class="form-control" 
+                                       value="{{ asset.total_hard_drive if asset else '' }}" placeholder="e.g. 512 GB SSD">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Device ID</label>
+                                <input type="text" name="device_id" class="form-control" 
+                                       value="{{ asset.device_id if asset else '' }}" placeholder="e.g. DEV001">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Product ID</label>
+                                <input type="text" name="product_id" class="form-control" 
+                                       value="{{ asset.product_id if asset else '' }}" placeholder="e.g. PROD001">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">System Type</label>
+                                <input type="text" name="system_type" class="form-control" 
+                                       value="{{ asset.system_type if asset else '' }}" placeholder="e.g. x64-based PC">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Display</label>
+                                <input type="text" name="display_info" class="form-control" 
+                                       value="{{ asset.display_info if asset else '' }}" placeholder="e.g. 15.6 inch FHD">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Monitor</label>
+                                <input type="text" name="monitor_info" class="form-control" 
+                                       value="{{ asset.monitor_info if asset else '' }}" placeholder="e.g. Dell P2419H">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ============================================ -->
+                    <!-- SOFTWARE INFORMATION                         -->
+                    <!-- ============================================ -->
+                    <div class="form-section-title" onclick="toggleSection(this)">
+                        <i class="bi bi-microsoft"></i> Software Information
+                        <i class="bi bi-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="form-section-content">
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Operating System</label>
+                                <input type="text" name="operating_system" class="form-control" 
+                                       value="{{ asset.operating_system if asset else '' }}" placeholder="e.g. Windows 11 Pro">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Microsoft OS Key</label>
+                                <input type="text" name="microsoft_os_key" class="form-control" 
+                                       value="{{ asset.microsoft_os_key if asset else '' }}" placeholder="e.g. XXXXX-XXXXX-XXXXX-XXXXX">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Office Key / Login</label>
+                                <input type="text" name="office_key_login" class="form-control" 
+                                       value="{{ asset.office_key_login if asset else '' }}" placeholder="e.g. user@marveltech.com">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Outlook Mail ID</label>
+                                <input type="text" name="outlook_mail_id" class="form-control" 
+                                       value="{{ asset.outlook_mail_id if asset else '' }}" placeholder="e.g. john.doe@marveltech.com">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ============================================ -->
+                    <!-- NETWORK INFORMATION                          -->
+                    <!-- ============================================ -->
+                    <div class="form-section-title" onclick="toggleSection(this)">
+                        <i class="bi bi-wifi"></i> Network Information
+                        <i class="bi bi-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="form-section-content">
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">LAN MAC Address</label>
+                                <input type="text" name="lan_mac_address" class="form-control" 
+                                       value="{{ asset.lan_mac_address if asset else '' }}" placeholder="e.g. 00:1A:2B:3C:4D:5E">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">WiFi MAC Address</label>
+                                <input type="text" name="wifi_mac_address" class="form-control" 
+                                       value="{{ asset.wifi_mac_address if asset else '' }}" placeholder="e.g. 00:1A:2B:3C:4D:5F">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">IP Address</label>
+                                <input type="text" name="ip_address" class="form-control" 
+                                       value="{{ asset.ip_address if asset else '' }}" placeholder="e.g. 192.168.1.100">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ============================================ -->
+                    <!-- PURCHASE & FINANCIAL                         -->
+                    <!-- ============================================ -->
+                    <div class="form-section-title" onclick="toggleSection(this)">
+                        <i class="bi bi-cash-stack"></i> Purchase & Financial Information
+                        <i class="bi bi-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="form-section-content">
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Vendor</label>
+                                <select name="vendor_id" class="form-select">
+                                    <option value="">Select Vendor...</option>
+                                    {% for ven in vendors %}
+                                    <option value="{{ ven.id }}" {{ 'selected' if asset and asset.vendor_id == ven.id else '' }}>
+                                        {{ ven.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Purchase Date</label>
+                                <input type="date" name="purchase_date" class="form-control" 
+                                       value="{{ asset.purchase_date if asset else '' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Purchase Bill Date</label>
+                                <input type="date" name="purchase_bill_date" class="form-control" 
+                                       value="{{ asset.purchase_bill_date if asset else '' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Cost Per Item (₹) <span class="text-danger">*</span></label>
+                                <input type="number" name="cost" id="costPerItem" class="form-control" step="0.01" min="0" required
+                                       value="{{ asset.cost if asset else '' }}" placeholder="e.g. 75000" oninput="calculateTotal()">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Quantity <span class="text-danger">*</span></label>
+                                <input type="number" name="quantity" id="quantity" class="form-control" min="1" required
+                                       value="{{ asset.quantity if asset else '1' }}" placeholder="e.g. 1" oninput="calculateTotal()">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Total Cost (₹)</label>
+                                <input type="text" id="totalCost" class="form-control" disabled 
+                                       value="{{ asset.total_cost|format_currency if asset else '₹0.00' }}" 
+                                       style="font-weight: bold; color: var(--primary);">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Asset Value Amount (₹)</label>
+                                <input type="number" name="asset_value_amount" class="form-control" step="0.01" min="0"
+                                       value="{{ asset.asset_value_amount if asset else '' }}" placeholder="e.g. 75000">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Warranty Expiry</label>
+                                <input type="date" name="warranty_expiry" class="form-control" 
+                                       value="{{ asset.warranty_expiry if asset else '' }}">
+                            </div>
+                            <div class="col-md-4 d-flex align-items-center">
+                                <div class="form-check form-switch mt-4">
+                                    <input class="form-check-input" type="checkbox" name="extended_warranty" id="extendedWarrantyCheck"
+                                           {{ 'checked' if asset and asset.extended_warranty else '' }}>
+                                    <label class="form-check-label fw-bold" for="extendedWarrantyCheck">
+                                        Extended Warranty
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Invoice Number</label>
+                                <input type="text" name="invoice_number" class="form-control" 
+                                       value="{{ asset.invoice_number if asset else '' }}" placeholder="e.g. INV-2024-001">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ============================================ -->
+                    <!-- SECURITY INFORMATION                         -->
+                    <!-- ============================================ -->
+                    <div class="form-section-title" onclick="toggleSection(this)">
+                        <i class="bi bi-shield-lock"></i> Security Information
+                        <i class="bi bi-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="form-section-content">
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Antivirus</label>
+                                <input type="text" name="antivirus" class="form-control" 
+                                       value="{{ asset.antivirus if asset else '' }}" placeholder="e.g. Norton, McAfee">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Local Admin Password</label>
+                                <input type="password" name="local_admin_password" class="form-control" 
+                                       value="{{ asset.local_admin_password if asset else '' }}" placeholder="Enter password">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ============================================ -->
+                    <!-- ASSET IMAGE                                  -->
+                    <!-- ============================================ -->
+                    <div class="form-section-title" onclick="toggleSection(this)">
+                        <i class="bi bi-image"></i> Asset Image
+                        <i class="bi bi-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="form-section-content">
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-12">
+                                {% if asset and asset.image_path %}
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Current Image</label>
+                                    <div class="p-3 rounded" style="border: 1px solid var(--border); background: var(--surface); max-width: 300px;">
+                                        <img src="{{ url_for('uploaded_image', filename=asset.image_path.split('/')[-1]) if asset.image_path else '' }}" 
+                                             alt="Asset Image" class="img-fluid rounded">
+                                    </div>
+                                </div>
+                                {% endif %}
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        {{ 'Update' if asset else 'Upload' }} Asset Image
+                                        <span class="badge bg-info ms-1">JPG, JPEG, PNG</span>
+                                        <span class="badge bg-warning ms-1">Max 100 KB</span>
+                                    </label>
+                                    <input type="file" name="asset_image" class="form-control" accept=".jpg,.jpeg,.png" 
+                                           id="assetImageInput" onchange="validateImageSize(this)">
+                                    <div id="imageError" class="text-danger small mt-1 d-none"></div>
+                                    <div id="imagePreview" class="mt-3 d-none">
+                                        <label class="form-label fw-bold small">Preview:</label>
+                                        <img id="previewImg" src="" alt="Preview" class="img-fluid rounded" style="max-height: 200px;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ============================================ -->
+                    <!-- DOCUMENTS UPLOAD                             -->
+                    <!-- ============================================ -->
+                    {% if not asset %}
+                    <div class="form-section-title" onclick="toggleSection(this)">
+                        <i class="bi bi-file-earmark"></i> Upload Documents
+                        <i class="bi bi-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="form-section-content">
+                        <div class="alert alert-info mb-3">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>File Upload Limits:</strong> Images max 100 KB (JPG, JPEG, PNG) | Documents max 200 KB (PDF only)
+                        </div>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Quotation (PDF) <span class="badge bg-warning">Max 200 KB</span></label>
+                                <input type="file" name="quotation" class="form-control" accept=".pdf" onchange="validatePdfSize(this, 'quotationError')">
+                                <div id="quotationError" class="text-danger small mt-1 d-none"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Purchase Order (PDF) <span class="badge bg-warning">Max 200 KB</span></label>
+                                <input type="file" name="po" class="form-control" accept=".pdf" onchange="validatePdfSize(this, 'poError')">
+                                <div id="poError" class="text-danger small mt-1 d-none"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Invoice (PDF) <span class="badge bg-warning">Max 200 KB</span></label>
+                                <input type="file" name="invoice" class="form-control" accept=".pdf" onchange="validatePdfSize(this, 'invoiceError')">
+                                <div id="invoiceError" class="text-danger small mt-1 d-none"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Warranty (PDF) <span class="badge bg-warning">Max 200 KB</span></label>
+                                <input type="file" name="warranty" class="form-control" accept=".pdf" onchange="validatePdfSize(this, 'warrantyError')">
+                                <div id="warrantyError" class="text-danger small mt-1 d-none"></div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Submit Buttons -->
+                    <div class="d-flex gap-2 justify-content-end mt-4 pt-3" style="border-top: 1px solid var(--border);">
+                        <a href="{{ url_for('business_unit') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-marvel" id="submitBtn">
+                            <i class="bi bi-check-lg me-1"></i>{{ 'Update Asset' if asset else 'Create Asset' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Toggle section collapse
+function toggleSection(title) {
+    title.classList.toggle('collapsed');
+    const content = title.nextElementSibling;
+    content.classList.toggle('collapsed');
+}
+
+// Constants
+const MAX_IMAGE_SIZE = 100 * 1024;
+const MAX_PDF_SIZE = 200 * 1024;
+
+function calculateTotal() {
+    const cost = parseFloat(document.getElementById('costPerItem').value) || 0;
+    const qty = parseInt(document.getElementById('quantity').value) || 0;
+    const total = cost * qty;
+    document.getElementById('totalCost').value = '₹' + total.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+function validateImageSize(input) {
+    const errorDiv = document.getElementById('imageError');
+    const previewDiv = document.getElementById('imagePreview');
+    const previewImg = document.getElementById('previewImg');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        if (file.size > MAX_IMAGE_SIZE) {
+            errorDiv.textContent = 'File exceeds maximum upload size. Maximum allowed: Image : 100 KB';
+            errorDiv.classList.remove('d-none');
+            previewDiv.classList.add('d-none');
+            input.value = '';
+            submitBtn.disabled = true;
+            return false;
+        }
+        const allowed = ['jpg', 'jpeg', 'png'];
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (!allowed.includes(ext)) {
+            errorDiv.textContent = 'Invalid file type. Allowed: JPG, JPEG, PNG';
+            errorDiv.classList.remove('d-none');
+            input.value = '';
+            submitBtn.disabled = true;
+            return false;
+        }
+        errorDiv.classList.add('d-none');
+        submitBtn.disabled = false;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImg.src = e.target.result;
+            previewDiv.classList.remove('d-none');
+        };
+        reader.readAsDataURL(file);
+        return true;
+    }
+}
+
+function validatePdfSize(input, errorId) {
+    const errorDiv = document.getElementById(errorId);
+    const submitBtn = document.getElementById('submitBtn');
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        if (file.size > MAX_PDF_SIZE) {
+            errorDiv.textContent = 'File exceeds maximum upload size. Maximum allowed: PDF : 200 KB';
+            errorDiv.classList.remove('d-none');
+            input.value = '';
+            submitBtn.disabled = true;
+            return false;
+        }
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (ext !== 'pdf') {
+            errorDiv.textContent = 'Invalid file type. Only PDF files allowed.';
+            errorDiv.classList.remove('d-none');
+            input.value = '';
+            submitBtn.disabled = true;
+            return false;
+        }
+        errorDiv.classList.add('d-none');
+        submitBtn.disabled = false;
+        return true;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', calculateTotal);
+
+document.getElementById('assetForm').addEventListener('submit', function(e) {
+    const imageInput = document.getElementById('assetImageInput');
+    if (imageInput.files && imageInput.files[0]) {
+        if (imageInput.files[0].size > MAX_IMAGE_SIZE) {
+            e.preventDefault();
+            document.getElementById('imageError').classList.remove('d-none');
+            return false;
+        }
+    }
+});
+</script>
+{% endblock %}

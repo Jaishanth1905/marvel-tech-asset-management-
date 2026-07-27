@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item">
+                    <a href="{{ url_for('business_unit_country', country_code=unit.code) }}">Business Unit</a>
+                </li>
+                <li class="breadcrumb-item active">{{ page_title }}</li>
+            </ol>
+        </nav>
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold">
+                    <i class="bi bi-box-seam me-2 text-primary"></i>{{ page_title }}
+                </h2>
+                <p class="text-muted">
+                    {{ unit.country_flag or '' }} {{ unit.name }} | {{ assets|length }} Records
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-table me-2"></i>{{ page_title }}</span>
+        <span class="badge bg-primary">{{ assets|length }} Records</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>Asset ID</th>
+                        <th>Asset Name</th>
+                        <th>Category</th>
+                        <th>Type</th>
+                        <th>Manufacturer</th>
+                        <th>Model</th>
+                        <th>Total Cost</th>
+                        <th>Status</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for asset in assets %}
+                    <tr>
+                        <td class="fw-bold text-primary">{{ asset.asset_id }}</td>
+                        <td>{{ asset.asset_name }}</td>
+                        <td>{{ asset.category.name if asset.category else '-' }}</td>
+                        <td>{% if asset.asset_type == 'Shared' %}IP{% else %}{{ asset.asset_type }}{% endif %}</td>
+                        <td>{{ asset.manufacturer or '-' }}</td>
+                        <td>{{ asset.model_number or '-' }}</td>
+                        <td>{{ asset.total_cost|format_currency }}</td>
+                        <td>
+                            <span class="status-badge status-{{ asset.current_status }}">
+                                {{ asset.current_status }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <a href="{{ url_for('asset_detail', asset_id=asset.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                            No assets found
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

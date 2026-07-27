@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('vendors_list') }}">Vendors</a></li>
+                <li class="breadcrumb-item active">{{ vendor.vendor_id }}</li>
+            </ol>
+        </nav>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h2 class="fw-bold">
+                    <i class="bi bi-shop me-2 text-primary"></i>{{ vendor.name }}
+                </h2>
+                <p class="text-muted mb-0">
+                    Vendor ID: <span class="fw-bold text-primary">{{ vendor.vendor_id }}</span>
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('edit_vendor', vendor_id=vendor.id) }}" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil me-1"></i>Edit
+                </a>
+                <a href="{{ url_for('vendors_list') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Back
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% set active_assets = assets|rejectattr('current_status', 'equalto', 'Scrapped')|list %}
+{% set latest_asset = assets|first %}
+<div class="row g-4 mb-4 align-items-stretch">
+    <!-- Left Card -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-info-circle me-2"></i>Contact Information
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tr>
+                        <td class="fw-bold text-muted" width="40%">Vendor ID</td>
+                        <td class="fw-bold text-primary">{{ vendor.vendor_id }}</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold text-muted">Vendor Name</td>
+                        <td>{{ vendor.name }}</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold text-muted">Contact Person</td>
+                        <td>{{ vendor.contact_person or '-' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold text-muted">Phone</td>
+                        <td>{{ vendor.phone or '-' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold text-muted">Email</td>
+                        <td>{{ vendor.email or '-' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold text-muted">GST Number</td>
+                        <td>{{ vendor.gst_number or '-' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold text-muted">Address</td>
+                        <td>{{ vendor.address or '-' }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- Right Card -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-box-seam me-2"></i>Assets Purchased from Vendor
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tr>
+                        <td class="fw-bold text-muted" width="45%">Total Assets Purchased</td>
+                        <td class="fw-bold text-info">{{ total_purchases }}</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold text-muted">Total Purchase Value</td>
+                        <td class="fw-bold text-primary">{{ total_value|format_currency }}</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold text-muted">Latest Purchase Date</td>
+                        <td>
+                            {{ latest_asset.purchase_date|format_date if latest_asset and latest_asset.purchase_date else '-' }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold text-muted">Active Assets</td>
+                        <td class="fw-bold text-success">{{ active_assets|length }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Asset Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-table me-2"></i>Purchased Assets</span>
+        <span class="badge bg-primary">{{ assets|length }} Assets</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>Asset ID</th>
+                        <th>Asset Name</th>
+                        <th>Category</th>
+                        <th>Purchase Date</th>
+                        <th>Cost</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for asset in assets %}
+                    <tr>
+                        <td class="fw-bold text-primary">{{ asset.asset_id }}</td>
+                        <td>{{ asset.asset_name }}</td>
+                        <td>{{ asset.category.name if asset.category else '-' }}</td>
+                        <td>{{ asset.purchase_date|format_date if asset.purchase_date else '-' }}</td>
+                        <td>{{ asset.total_cost|format_currency }}</td>
+                        <td>
+                            <span class="status-badge status-{{ asset.current_status }}">
+                                {{ asset.current_status }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('asset_detail', asset_id=asset.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                            No assets purchased from this vendor
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

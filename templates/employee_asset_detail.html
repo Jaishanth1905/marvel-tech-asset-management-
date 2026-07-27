@@ -1,0 +1,112 @@
+{% extends "employee_portal_base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Asset Details</h2>
+        <p class="text-muted mb-0">
+            Details of the asset currently assigned to you.
+        </p>
+    </div>
+    <a href="{{ url_for('employee_my_assets') }}"
+       class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>
+        Back to My Assets
+    </a>
+</div>
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-laptop me-2"></i>
+                Assigned Asset
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="small text-muted">Asset ID</div>
+                        <div class="fw-bold">{{ asset.asset_id }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="small text-muted">Asset Name</div>
+                        <div class="fw-bold">{{ asset.asset_name }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="small text-muted">Asset Type</div>
+                        <div class="fw-bold">{{ asset.asset_type }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="small text-muted">Category</div>
+                        <div class="fw-bold">
+                            {{ asset.category.name if asset.category else '—' }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="small text-muted">Manufacturer</div>
+                        <div class="fw-bold">
+                            {{ asset.manufacturer or '—' }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="small text-muted">Model</div>
+                        <div class="fw-bold">
+                            {{ asset.model_name or asset.model_number or '—' }}
+                        </div>
+                    </div>
+                    {% if asset.serial_number %}
+                    <div class="col-md-6">
+                        <div class="small text-muted">Serial Number</div>
+                        <div class="fw-bold">{{ asset.serial_number }}</div>
+                    </div>
+                    {% endif %}
+                    <div class="col-md-6">
+                        <div class="small text-muted">Assignment Date</div>
+                        <div class="fw-bold">
+                            {{ assignment.assigned_date.strftime('%d %b %Y') }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="small text-muted">Warranty Expiry</div>
+                        <div class="fw-bold">
+                            {% if asset.warranty_expiry %}
+                                {{ asset.warranty_expiry.strftime('%d %b %Y') }}
+                            {% else %}
+                                Not available
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="small text-muted">Asset Status</div>
+                        <div class="fw-bold">{{ asset.current_status }}</div>
+                    </div>
+                    {% if assignment.remarks %}
+                    <div class="col-12">
+                        <div class="small text-muted mb-1">Assignment Notes</div>
+                        <div class="p-3 rounded bg-light">
+                            {{ assignment.remarks }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-life-preserver me-2"></i>
+                Need Help?
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    Raise a ticket if this asset is damaged, not working, or needs support.
+                </p>
+                <a href="{{ url_for('employee_raise_ticket') }}"
+                   class="btn btn-danger w-100">
+                    <i class="bi bi-plus-circle me-1"></i>
+                    Raise a Ticket
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

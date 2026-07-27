@@ -1,0 +1,66 @@
+{% extends "employee_portal_base.html" %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">My Assets</h4>
+        <p class="text-muted mb-0">
+            Assets currently assigned to you.
+        </p>
+    </div>
+    <a href="{{ url_for('employee_request_asset') }}" class="btn btn-marvel">
+        <i class="bi bi-plus-circle me-1"></i>
+         Request New Asset
+    </a>
+</div>
+<div class="card">
+    <div class="card-body p-4">
+        {% if assignments %}
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr class="text-muted small">
+                        <th>Asset ID</th>
+                        <th>Asset Name</th>
+                        <th>Model</th>
+                        <th>Warranty</th>
+                        <th>Assigned Date</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for assignment in assignments %}
+                    <tr>
+                        <td class="fw-bold">{{ assignment.asset.asset_id }}</td>
+                        <td>{{ assignment.asset.asset_name }}</td>
+                        <td>{{ assignment.asset.model_name or '—' }}</td>
+                        <td>
+                            {% if assignment.asset.warranty_expiry %}
+                                {{ assignment.asset.warranty_expiry.strftime('%d %b %Y') }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>{{ assignment.assigned_date.strftime('%d %b %Y') }}</td>
+                        <td class="text-end">
+                            <a href="{{ url_for('employee_asset_detail', asset_id=assignment.asset.id) }}"
+                            class="btn btn-sm btn-outline-secondary">
+                             View Details
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-laptop fs-1 text-muted"></i>
+            <h5 class="fw-bold mt-3">No assigned assets</h5>
+            <p class="text-muted mb-0">
+                You do not currently have any assigned assets.
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

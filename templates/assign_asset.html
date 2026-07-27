@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Assign Asset</li>
+            </ol>
+        </nav>
+        <h2 class="fw-bold"><i class="bi bi-person-plus me-2 text-primary"></i>Asset Assignment</h2>
+        <p class="text-muted">Select an employee and assign an available asset</p>
+    </div>
+</div>
+
+<!-- Assignment Workflow -->
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header" style="background: var(--primary);">
+                <h5 class="mb-0 text-white"><i class="bi bi-arrow-left-right me-2"></i>New Assignment</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('assign_asset_module') }}" id="assignForm">
+                    
+                    <!-- Step 1: Select Employee -->
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="icon-box icon-box-primary me-3" style="width: 40px; height: 40px; font-size: 1.2rem;">
+                                <span class="fw-bold">1</span>
+                            </div>
+                            <h5 class="fw-bold mb-0">Select Employee</h5>
+                        </div>
+                        
+                        <!-- Filter Toggle -->
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="unassignedToggle" 
+                                       {{ 'checked' if show_unassigned_only else '' }}
+                                       onchange="toggleUnassigned(this)">
+                                <label class="form-check-label" for="unassignedToggle">
+                                    <i class="bi bi-funnel me-1"></i>Show only employees without assigned assets
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Employee <span class="text-danger">*</span></label>
+                            <select name="employee_id" class="form-select form-select-lg" required id="employeeSelect">
+                                <option value="">Choose Employee...</option>
+                                {% for emp in employees %}
+                                <option value="{{ emp.id }}">
+                                    {{ emp.name }} ({{ emp.employee_code }}) | {{ emp.designation }} | {{ emp.department }} | {{ emp.business_unit }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% if not employees %}
+                            <div class="alert alert-warning mt-2 mb-0">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                No employees available. 
+                                {% if show_unassigned_only %}
+                                <a href="{{ url_for('assign_asset_module') }}">Show all active employees</a>
+                                {% else %}
+                                <a href="{{ url_for('add_employee') }}">Add a new employee</a>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mb-4">
+                        <i class="bi bi-arrow-down fs-2 text-muted"></i>
+                    </div>
+                    
+                    <!-- Step 2: Choose Available Asset -->
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="icon-box icon-box-success me-3" style="width: 40px; height: 40px; font-size: 1.2rem;">
+                                <span class="fw-bold">2</span>
+                            </div>
+                            <h5 class="fw-bold mb-0">Choose Available Asset</h5>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Available Asset <span class="text-danger">*</span></label>
+                            <select name="asset_id" class="form-select form-select-lg" required id="assetSelect">
+                                <option value="">Choose Asset...</option>
+                                {% for ast in available_assets %}
+                                <option value="{{ ast.id }}" data-category="{{ ast.category.name if ast.category else '' }}" data-type="{% if ast.asset_type == 'Shared' %}IP{% else %}{{ ast.asset_type }}{% endif %}">
+                                    {{ ast.asset_id }} - {{ ast.asset_name }} | {{ ast.category.name if ast.category else 'No Category' }} | {% if ast.asset_type == 'Shared' %}IP{% else %}{{ ast.asset_type }}{% endif %} | {{ ast.cost|format_currency }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% if not available_assets %}
+                            <div class="alert alert-warning mt-2 mb-0">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                No available assets found. All assets are currently assigned or in service.
+                                <a href="{{ url_for('add_asset') }}">Add a new asset</a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mb-4">
+                        <i class="bi bi-arrow-down fs-2 text-muted"></i>
+                    </div>
+                    
+                    <!-- Step 3: Assignment Details -->
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="icon-box icon-box-info me-3" style="width: 40px; height: 40px; font-size: 1.2rem;">
+                                <span class="fw-bold">3</span>
+                            </div>
+                            <h5 class="fw-bold mb-0">Assignment Details</h5>
+                        </div>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Assigned Date <span class="text-danger">*</span></label>
+                                <input type="date" name="assigned_date" class="form-control" required value="{{ today }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Assigned By</label>
+                                <input type="text" name="assigned_by" class="form-control" value="Admin">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Remarks</label>
+                                <input type="text" name="remarks" class="form-control" placeholder="Optional remarks...">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Summary Preview -->
+                    <div class="alert mb-4" style="background: rgba(181,32,37,0.05); border: 1px solid rgba(181,32,37,0.15);">
+                        <h6 class="fw-bold mb-2"><i class="bi bi-eye me-2"></i>Assignment Preview</h6>
+                        <div id="assignmentPreview" class="text-muted">
+                            <p class="mb-1">Select an employee and asset to see the preview.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-marvel btn-lg" id="assignBtn" {% if not employees or not available_assets %}disabled{% endif %}>
+                            <i class="bi bi-check-lg me-1"></i>Assign Asset
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Available Assets Summary -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-box me-2"></i>Available Assets Summary
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    {% set it_available = available_assets|selectattr('asset_type', 'equalto', 'IT')|list %}
+                    {% set infra_available = available_assets|selectattr('asset_type', 'equalto', 'Infrastructure')|list %}
+                    {% set fixed_available = available_assets|selectattr('asset_type', 'equalto', 'Fixed')|list %}
+                    {% set ip_available = available_assets|selectattr('asset_type', 'equalto', 'Shared')|list %}
+                    
+                    <div class="col-md-3 text-center">
+                        <div class="p-3 rounded" style="background: rgba(181,32,37,0.05);">
+                            <h4 class="fw-bold text-primary mb-1">{{ it_available|length }}</h4>
+                            <small class="text-muted">IT Assets Available</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="p-3 rounded" style="background: rgba(8,145,178,0.05);">
+                            <h4 class="fw-bold text-info mb-1">{{ infra_available|length }}</h4>
+                            <small class="text-muted">Infrastructure Available</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="p-3 rounded" style="background: rgba(217,119,6,0.05);">
+                            <h4 class="fw-bold text-warning mb-1">{{ fixed_available|length }}</h4>
+                            <small class="text-muted">Fixed Assets Available</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="p-3 rounded" style="background: rgba(107,114,128,0.05);">
+                            <h4 class="fw-bold text-secondary mb-1">{{ ip_available|length }}</h4>
+                            <small class="text-muted">IP Assets Available</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Toggle unassigned employees filter
+function toggleUnassigned(checkbox) {
+    const url = new URL(window.location.href);
+    if (checkbox.checked) {
+        url.searchParams.set('unassigned_only', 'true');
+    } else {
+        url.searchParams.delete('unassigned_only');
+    }
+    window.location.href = url.toString();
+}
+
+// Update assignment preview when selections change
+const employeeSelect = document.getElementById('employeeSelect');
+const assetSelect = document.getElementById('assetSelect');
+const previewDiv = document.getElementById('assignmentPreview');
+
+function updatePreview() {
+    const empOption = employeeSelect.options[employeeSelect.selectedIndex];
+    const assetOption = assetSelect.options[assetSelect.selectedIndex];
+    
+    if (employeeSelect.value && assetSelect.value) {
+        previewDiv.innerHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-1"><strong>Employee:</strong> ${empOption.text.split('|')[0].trim()}</p>
+                    <p class="mb-1"><strong>Designation:</strong> ${empOption.text.split('|')[1] ? empOption.text.split('|')[1].trim() : '-'}</p>
+                </div>
+                <div class="col-md-6">
+                    <p class="mb-1"><strong>Asset:</strong> ${assetOption.text.split('|')[0].trim()}</p>
+                    <p class="mb-1"><strong>Category:</strong> ${assetOption.getAttribute('data-category') || '-'}</p>
+                    <p class="mb-0"><strong>Type:</strong> <span class="badge bg-primary">${assetOption.getAttribute('data-type') || '-'}</span></p>
+                </div>
+            </div>
+        `;
+    } else {
+        previewDiv.innerHTML = '<p class="mb-1">Select an employee and asset to see the preview.</p>';
+    }
+}
+
+employeeSelect.addEventListener('change', updatePreview);
+assetSelect.addEventListener('change', updatePreview);
+</script>
+{% endblock %}

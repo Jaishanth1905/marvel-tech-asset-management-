@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('capital_budget_dashboard') }}">Capital Budget</a></li>
+                <li class="breadcrumb-item active">{{ budget.business_unit.name if budget.business_unit else 'Unassigned' }} - FY {{ budget.fiscal_year }}</li>
+            </ol>
+        </nav>
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold"><i class="bi bi-cash-stack me-2 text-primary"></i>Capital Budget Details</h2>
+                <p class="text-muted">
+                    {{ budget.business_unit.name if budget.business_unit else 'Unassigned' }} | 
+                    Fiscal Year: <span class="fw-bold">{{ budget.fiscal_year }}</span> |
+                    Status: <span class="badge bg-{{ 'success' if budget.status == 'Active' else 'warning' if budget.status == 'Draft' else 'secondary' }}">{{ budget.status }}</span>
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('edit_capital_budget', budget_id=budget.id) }}" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil me-1"></i>Edit Budget
+                </a>
+                <a href="{{ url_for('capital_budget_dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Back
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Budget Overview Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card h-100 text-center p-3" style="border-left: 3px solid var(--primary);">
+            <h6 class="text-muted mb-2">Allocated Budget</h6>
+            <h4 class="fw-bold text-primary">{{ budget.allocated_budget|format_currency }}</h4>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 text-center p-3" style="border-left: 3px solid #059669;">
+            <h6 class="text-muted mb-2">Total Spent</h6>
+            <h4 class="fw-bold text-success">{{ utilization.total_spent|format_currency }}</h4>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 text-center p-3" style="border-left: 3px solid #d97706;">
+            <h6 class="text-muted mb-2">Remaining</h6>
+            <h4 class="fw-bold text-warning">{{ utilization.remaining|format_currency }}</h4>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 text-center p-3" style="border-left: 3px solid #0891b2;">
+            <h6 class="text-muted mb-2">Utilization</h6>
+            <h4 class="fw-bold text-info">{{ utilization.utilization_pct }}%</h4>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Bar -->
+<div class="card mb-4">
+    <div class="card-header"><i class="bi bi-graph-up me-2"></i>Budget Utilization</div>
+    <div class="card-body">
+        <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Spent vs Allocated</span>
+            <span class="fw-bold">{{ utilization.utilization_pct }}%</span>
+        </div>
+        <div class="progress" style="height: 12px;">
+            <div class="progress-bar bg-{{ 'success' if utilization.utilization_pct < 70 else 'warning' if utilization.utilization_pct < 90 else 'danger' }}" 
+                 style="width: {{ utilization.utilization_pct }}%">
+            </div>
+        </div>
+        <div class="row mt-3 text-center">
+            <div class="col-4">
+                <small class="text-muted">Allocated</small>
+                <div class="fw-bold">{{ budget.allocated_budget|format_currency }}</div>
+            </div>
+            <div class="col-4">
+                <small class="text-muted">Spent</small>
+                <div class="fw-bold text-success">{{ utilization.total_spent|format_currency }}</div>
+            </div>
+            <div class="col-4">
+                <small class="text-muted">Remaining</small>
+                <div class="fw-bold text-warning">{{ utilization.remaining|format_currency }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Budget Breakdown by Asset Type -->
+<div class="row g-4">
+    <!-- IT Budget -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center" style="background: rgba(99,102,241,0.08);">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="icon-box icon-box-primary" style="width: 36px; height: 36px; font-size: 1rem;">
+                        <i class="bi bi-laptop"></i>
+                    </div>
+                    <span class="fw-bold">IT Assets</span>
+                </div>
+                <span class="badge bg-primary">{{ utilization.by_type.IT.spent|format_currency }} / {{ utilization.by_type.IT.budget|format_currency }}</span>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <small class="text-muted">Budget Utilization</small>
+                    <small class="fw-bold">
+                        {% set it_pct = (utilization.by_type.IT.spent / utilization.by_type.IT.budget * 100) if utilization.by_type.IT.budget > 0 else 0 %}
+                        {{ "%.1f"|format(it_pct) }}%
+                    </small>
+                </div>
+                <div class="progress mb-3" style="height: 8px;">
+                    <div class="progress-bar bg-primary" style="width: {{ it_pct }}%"></div>
+                </div>
+                <div class="row g-2 text-center">
+                    <div class="col-4">
+                        <small class="text-muted d-block">Budget</small>
+                        <span class="fw-bold">{{ utilization.by_type.IT.budget|format_currency }}</span>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-muted d-block">Spent</small>
+                        <span class="fw-bold text-success">{{ utilization.by_type.IT.spent|format_currency }}</span>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-muted d-block">Remaining</small>
+                        <span class="fw-bold text-warning">{{ utilization.by_type.IT.remaining|format_currency }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Infrastructure Budget -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center" style="background: rgba(8,145,178,0.08);">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="icon-box icon-box-info" style="width: 36px; height: 36px; font-size: 1rem;">
+                        <i class="bi bi-building"></i>
+                    </div>
+                    <span class="fw-bold">Infrastructure</span>
+                </div>
+                <span class="badge bg-info">{{ utilization.by_type.Infrastructure.spent|format_currency }} / {{ utilization.by_type.Infrastructure.budget|format_currency }}</span>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <small class="text-muted">Budget Utilization</small>
+                    <small class="fw-bold">
+                        {% set infra_pct = (utilization.by_type.Infrastructure.spent / utilization.by_type.Infrastructure.budget * 100) if utilization.by_type.Infrastructure.budget > 0 else 0 %}
+                        {{ "%.1f"|format(infra_pct) }}%
+                    </small>
+                </div>
+                <div class="progress mb-3" style="height: 8px;">
+                    <div class="progress-bar bg-info" style="width: {{ infra_pct }}%"></div>
+                </div>
+                <div class="row g-2 text-center">
+                    <div class="col-4">
+                        <small class="text-muted d-block">Budget</small>
+                        <span class="fw-bold">{{ utilization.by_type.Infrastructure.budget|format_currency }}</span>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-muted d-block">Spent</small>
+                        <span class="fw-bold text-success">{{ utilization.by_type.Infrastructure.spent|format_currency }}</span>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-muted d-block">Remaining</small>
+                        <span class="fw-bold text-warning">{{ utilization.by_type.Infrastructure.remaining|format_currency }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fixed Assets Budget -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center" style="background: rgba(217,119,6,0.08);">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="icon-box icon-box-warning" style="width: 36px; height: 36px; font-size: 1rem;">
+                        <i class="bi bi-pin-map"></i>
+                    </div>
+                    <span class="fw-bold">Fixed Assets</span>
+                </div>
+                <span class="badge bg-warning">{{ utilization.by_type.Fixed.spent|format_currency }} / {{ utilization.by_type.Fixed.budget|format_currency }}</span>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <small class="text-muted">Budget Utilization</small>
+                    <small class="fw-bold">
+                        {% set fixed_pct = (utilization.by_type.Fixed.spent / utilization.by_type.Fixed.budget * 100) if utilization.by_type.Fixed.budget > 0 else 0 %}
+                        {{ "%.1f"|format(fixed_pct) }}%
+                    </small>
+                </div>
+                <div class="progress mb-3" style="height: 8px;">
+                    <div class="progress-bar bg-warning" style="width: {{ fixed_pct }}%"></div>
+                </div>
+                <div class="row g-2 text-center">
+                    <div class="col-4">
+                        <small class="text-muted d-block">Budget</small>
+                        <span class="fw-bold">{{ utilization.by_type.Fixed.budget|format_currency }}</span>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-muted d-block">Spent</small>
+                        <span class="fw-bold text-success">{{ utilization.by_type.Fixed.spent|format_currency }}</span>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-muted d-block">Remaining</small>
+                        <span class="fw-bold text-warning">{{ utilization.by_type.Fixed.remaining|format_currency }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shared/IP Budget -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center" style="background: rgba(107,114,128,0.08);">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="icon-box" style="width: 36px; height: 36px; font-size: 1rem; background: rgba(107,114,128,0.1); color: #6b7280; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-lightbulb"></i>
+                    </div>
+                    <span class="fw-bold">IP Assets</span>
+                </div>
+                <span class="badge bg-secondary">{{ utilization.by_type.Shared.spent|format_currency }} / {{ utilization.by_type.Shared.budget|format_currency }}</span>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <small class="text-muted">Budget Utilization</small>
+                    <small class="fw-bold">
+                        {% set shared_pct = (utilization.by_type.Shared.spent / utilization.by_type.Shared.budget * 100) if utilization.by_type.Shared.budget > 0 else 0 %}
+                        {{ "%.1f"|format(shared_pct) }}%
+                    </small>
+                </div>
+                <div class="progress mb-3" style="height: 8px;">
+                    <div class="progress-bar bg-secondary" style="width: {{ shared_pct }}%"></div>
+                </div>
+                <div class="row g-2 text-center">
+                    <div class="col-4">
+                        <small class="text-muted d-block">Budget</small>
+                        <span class="fw-bold">{{ utilization.by_type.Shared.budget|format_currency }}</span>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-muted d-block">Spent</small>
+                        <span class="fw-bold text-success">{{ utilization.by_type.Shared.spent|format_currency }}</span>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-muted d-block">Remaining</small>
+                        <span class="fw-bold text-warning">{{ utilization.by_type.Shared.remaining|format_currency }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Budget Info -->
+<div class="card mt-4">
+    <div class="card-header"><i class="bi bi-info-circle me-2"></i>Budget Information</div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label fw-bold text-muted">Created By</label>
+                <p class="fw-bold">{{ budget.created_by or 'Admin' }}</p>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold text-muted">Created At</label>
+                <p>{{ budget.created_at.strftime('%d-%b-%Y %H:%M') if budget.created_at else '-' }}</p>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold text-muted">Last Updated</label>
+                <p>{{ budget.updated_at.strftime('%d-%b-%Y %H:%M') if budget.updated_at else '-' }}</p>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold text-muted">Fiscal Year</label>
+                <p class="fw-bold text-primary">{{ budget.fiscal_year }}</p>
+            </div>
+            {% if budget.notes %}
+            <div class="col-12">
+                <label class="form-label fw-bold text-muted">Notes</label>
+                <p>{{ budget.notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

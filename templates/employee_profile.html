@@ -1,0 +1,45 @@
+{% extends "employee_portal_base.html" %}
+{% block content %}
+<div class="mb-4">
+    <h4 class="fw-bold mb-1">My Profile</h4>
+    <p class="text-muted mb-0">Your employee information.</p>
+</div>
+<div class="card">
+    <div class="card-body p-4">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="small text-muted">Employee ID</div>
+                <div class="fw-bold">{{ employee.employee_code }}</div>
+            </div>
+            <div class="col-md-6">
+                <div class="small text-muted">Name</div>
+                <div class="fw-bold">{{ employee.name }}</div>
+            </div>
+            <div class="col-md-6">
+                <div class="small text-muted">Email</div>
+                <div class="fw-bold">{{ employee.email or '—' }}</div>
+            </div>
+            <div class="col-md-6">
+                <div class="small text-muted">Phone</div>
+                <div class="fw-bold">{{ employee.phone or '—' }}</div>
+            </div>
+            <div class="col-md-6">
+                <div class="small text-muted">Department</div>
+                <div class="fw-bold">{{ employee.department or '—' }}</div>
+            </div>
+            <div class="col-md-6">
+                <div class="small text-muted">Designation</div>
+                <div class="fw-bold">{{ employee.designation or '—' }}</div>
+            </div>
+            <div class="col-md-6">
+                <div class="small text-muted">Business Unit</div>
+                <div class="fw-bold">{{ employee.business_unit or '—' }}</div>
+            </div>
+            <div class="col-md-6">
+                <div class="small text-muted">Location</div>
+                <div class="fw-bold">{{ employee.location or '—' }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
